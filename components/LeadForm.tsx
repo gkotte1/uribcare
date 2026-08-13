@@ -36,8 +36,10 @@ export default function LeadForm() {
     setErrRole(roleBad);
     if (roleBad) ok = false;
     if (!ok) {
-      const first = e.currentTarget.querySelector<HTMLElement>('.err input, .err select');
-      first?.focus();
+      // The `.err` classes are applied by the render that follows this handler,
+      // so resolve the first invalid control from the flags rather than the DOM.
+      const firstBad = nameBad ? 'in-name' : emailBad ? 'in-email' : 'in-role';
+      document.getElementById(firstBad)?.focus();
       return;
     }
 
@@ -75,12 +77,14 @@ export default function LeadForm() {
             autoComplete="name"
             placeholder="Your name"
             value={name}
+            aria-invalid={errName || undefined}
+            aria-describedby={errName ? 'e-name' : undefined}
             onChange={(e) => {
               setName(e.target.value);
               setErrName(false);
             }}
           />
-          <span className="msg">Please enter your name.</span>
+          <span className="msg" id="e-name">Please enter your name.</span>
         </div>
         <div className="row2">
           <div className={`field${errEmail ? ' err' : ''}`} id="f-email">
@@ -94,12 +98,14 @@ export default function LeadForm() {
               autoComplete="email"
               placeholder="you@email.com"
               value={email}
+              aria-invalid={errEmail || undefined}
+              aria-describedby={errEmail ? 'e-email' : undefined}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setErrEmail(false);
               }}
             />
-            <span className="msg">Please enter a valid email.</span>
+            <span className="msg" id="e-email">Please enter a valid email.</span>
           </div>
           <div className="field" id="f-phone">
             <label htmlFor="in-phone">Phone</label>
@@ -123,6 +129,8 @@ export default function LeadForm() {
             id="in-role"
             name="role"
             value={role}
+            aria-invalid={errRole || undefined}
+            aria-describedby={errRole ? 'e-role' : undefined}
             onChange={(e) => {
               setRole(e.target.value);
               setErrRole(false);
@@ -138,7 +146,7 @@ export default function LeadForm() {
             <option>Clinic, pharmacy or lab</option>
             <option>Other</option>
           </select>
-          <span className="msg">Please choose an option.</span>
+          <span className="msg" id="e-role">Please choose an option.</span>
         </div>
         <div className="field" id="f-msg">
           <label htmlFor="in-message">What do you need help with?</label>
