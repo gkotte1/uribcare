@@ -3,21 +3,40 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import CategoryIcon from '@/components/CategoryIcon';
+import { ECOSYSTEM_NAV, SERVICE_NAV } from '@/content/nav';
+import type { NavItem } from '@/content/nav';
 
-const LINKS = [
-  { href: '#services', label: 'Services' },
-  { href: '#ecosystem', label: 'Ecosystem' },
+type MenuId = 'services' | 'ecosystem';
+
+/** Category lists behind the Services and Ecosystem nav items. */
+const MENUS: Record<MenuId, { items: NavItem[]; allLabel: string }> = {
+  services: { items: SERVICE_NAV, allLabel: 'View the services section' },
+  ecosystem: { items: ECOSYSTEM_NAV, allLabel: 'View the ecosystem section' },
+};
+
+const LINKS: { href: string; label: string; menu?: MenuId }[] = [
+  { href: '#services', label: 'Services', menu: 'services' },
+  { href: '#ecosystem', label: 'Ecosystem', menu: 'ecosystem' },
   { href: '#journey', label: 'How it works' },
   { href: '#autism', label: 'Autism care' },
   { href: '#trust', label: 'Security' },
 ];
 
+const Caret = () => (
+  <svg className="nav-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+);
+
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<MenuId | null>(null);
   const [active, setActive] = useState<string>('');
   const [progress, setProgress] = useState(0);
+  const headerRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
   // On the home page the section links stay as in-page anchors; anywhere else
@@ -79,7 +98,33 @@ export default function Nav() {
     };
   }, [open]);
 
-  const close = useCallback(() => setOpen(false), []);
+  // close an open dropdown on Escape or on a click outside the navbar
+  useEffect(() => {
+    if (!openMenu) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenMenu(null);
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (!headerRef.current?.contains(e.target as Node)) setOpenMenu(null);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [openMenu]);
+
+  // never leave a menu or the drawer hanging open across a route change
+  useEffect(() => {
+    setOpen(false);
+    setOpenMenu(null);
+  }, [pathname]);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setOpenMenu(null);
+  }, []);
 
   const toggleTheme = () => {
     const root = document.documentElement;
@@ -89,9 +134,22 @@ export default function Nav() {
     root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
   };
 
+  const categoryLinks = (items: NavItem[]) =>
+    items.map((item) => (
+      <Link className="nav-menu-item" href={item.href} key={item.slug} onClick={close}>
+        <span className="nav-menu-ico">
+          <CategoryIcon name={item.icon} size={20} />
+        </span>
+        <span>
+          <strong>{item.name}</strong>
+          <span className="nav-menu-desc">{item.shortDescription}</span>
+        </span>
+      </Link>
+    ));
+
   return (
     <>
-      <header className={`nav${scrolled ? ' scrolled' : ''}`} id="nav">
+      <header className={`nav${scrolled ? ' scrolled' : ''}`} id="nav" ref={headerRef}>
         <div
           className="scroll-progress"
           style={{ width: '100%', transform: `scaleX(${progress})`, opacity: scrolled ? 1 : 0 }}
@@ -103,15 +161,54 @@ export default function Nav() {
           </a>
 
           <nav className="nav-links" aria-label="Primary">
-            {LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={`${base}${l.href}`}
-                aria-current={isHome && active === l.href.slice(1) ? 'true' : undefined}
-              >
-                {l.label}
-              </a>
-            ))}
+            {LINKS.map((l) => {
+              const isActive = isHome && active === l.href.slice(1);
+
+              if (!l.menu) {
+                return (
+                  <a key={l.href} href={`${base}${l.href}`} aria-current={isActive ? 'true' : undefined}>
+                    {l.label}
+                  </a>
+                );
+              }
+
+              const menu = MENUS[l.menu];
+              const expanded = openMenu === l.menu;
+              return (
+                <div
+                  className="nav-item"
+                  key={l.href}
+                  onMouseEnter={() => setOpenMenu(l.menu as MenuId)}
+                  onMouseLeave={() => setOpenMenu((cur) => (cur === l.menu ? null : cur))}
+                >
+                  <button
+                    type="button"
+                    className="nav-trigger"
+                    aria-expanded={expanded}
+                    aria-controls={`nav-menu-${l.menu}`}
+                    data-active={isActive ? 'true' : undefined}
+                    onClick={() => {
+                      setOpenMenu((cur) => (cur === l.menu ? null : (l.menu as MenuId)));
+                      setOpen(false);
+                    }}
+                  >
+                    {l.label}
+                    <Caret />
+                  </button>
+                  {expanded && (
+                    <div className={`nav-menu${menu.items.length > 4 ? ' wide' : ''}`} id={`nav-menu-${l.menu}`}>
+                      <div className="nav-menu-inner">
+                        <div className="nav-menu-grid">{categoryLinks(menu.items)}</div>
+                        <a className="nav-menu-all" href={`${base}${l.href}`} onClick={close}>
+                          {menu.allLabel}
+                          <span aria-hidden="true">→</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </nav>
 
           <div className="nav-cta">
@@ -140,7 +237,10 @@ export default function Nav() {
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
               aria-controls="nav-drawer"
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => {
+                setOpen((v) => !v);
+                setOpenMenu(null);
+              }}
             >
               <span className="burger-box" aria-hidden="true">
                 <i /><i /><i />
@@ -154,14 +254,27 @@ export default function Nav() {
 
       <div className={`nav-drawer${open ? ' open' : ''}`} id="nav-drawer" hidden={!open}>
         <nav aria-label="Mobile">
-          {LINKS.map((l) => (
-            <a key={l.href} className="dl" href={`${base}${l.href}`} onClick={close}>
-              {l.label}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M9 6l6 6-6 6" />
-              </svg>
-            </a>
-          ))}
+          {LINKS.map((l) =>
+            l.menu ? (
+              // the section link, followed by its individual detail pages
+              <div className="drawer-group" key={l.href}>
+                <a className="dl" href={`${base}${l.href}`} onClick={close}>
+                  {l.label}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
+                </a>
+                <div className="drawer-sub">{categoryLinks(MENUS[l.menu].items)}</div>
+              </div>
+            ) : (
+              <a key={l.href} className="dl" href={`${base}${l.href}`} onClick={close}>
+                {l.label}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </a>
+            )
+          )}
         </nav>
         <div className="drawer-actions">
           <Link href="/register" className="btn btn-ghost" onClick={close}>
