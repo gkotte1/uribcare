@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "qa": "node qa/responsive.mjs && node qa/interaction.mjs && node qa/principles.mjs && node qa/ecosystem.mjs",
+    "qa:responsive": "node qa/responsive.mjs",
+    "qa:interaction": "node qa/interaction.mjs",
+    "qa:principles": "node qa/principles.mjs",
+    "qa:ecosystem": "node qa/ecosystem.mjs"
   },
   "dependencies": {
     "next": "14.2.5",
@@ -19,6 +24,7 @@
     "@types/react-dom": "18.3.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.5",
+    "playwright": "^1.62.1",
     "typescript": "5.5.3"
   }
 }
