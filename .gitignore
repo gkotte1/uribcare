@@ -8,6 +8,8 @@
 
 # testing
 /coverage
+# Playwright QA output (see qa/)
+/shots
 
 # next.js
 /.next/
