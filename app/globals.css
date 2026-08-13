@@ -455,9 +455,12 @@ header.nav.scrolled {
 }
 
 .brand { display: inline-flex; align-items: center; gap: .55rem; flex: none; }
-.brand-logo { height: 32px; width: auto; display: block; transition: opacity .2s var(--ease); }
+/* The wordmark is a 200x67 raster, so it is scaled down at every size below —
+   keeping it crisp. Raising it past ~38px would upscale it on 2x displays. */
+.brand-logo { height: 38px; width: auto; display: block; transition: opacity .2s var(--ease); }
 .brand:hover .brand-logo { opacity: .82; }
-footer .brand-logo { height: 34px; }
+@media (max-width: 560px) { .brand-logo { height: 32px; } }
+footer .brand-logo { height: 40px; }
 :root[data-theme="dark"] .brand-logo { filter: brightness(1.18) saturate(1.05); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .brand-logo { filter: brightness(1.18) saturate(1.05); } }
 
@@ -1809,9 +1812,29 @@ footer.ft::before {
   display: flex; gap: .35rem; padding: .4rem;
   background: var(--card); border: 1px solid var(--line);
   border-radius: var(--r-pill); box-shadow: var(--sh-sm);
-  overflow-x: auto; scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  /* keeps the first and last tab fully reachable when snapped */
+  scroll-padding-inline: .4rem;
+  -webkit-overflow-scrolling: touch;
+  /* Firefox: transparent track so the capsule shows through */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--pine) 40%, transparent) transparent;
 }
+/* WebKit: the scroll affordance sits inside the capsule — no track, and a thumb
+   inset by a transparent border so it never touches the rounded edge. */
+.reg-tabs::-webkit-scrollbar { height: 8px; }
+.reg-tabs::-webkit-scrollbar-track { background: transparent; border-radius: var(--r-pill); }
+.reg-tabs::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--pine) 38%, transparent);
+  border: 2px solid transparent; background-clip: padding-box;
+  border-radius: var(--r-pill);
+}
+.reg-tabs::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--pine) 62%, transparent);
+  background-clip: padding-box;
+}
+.reg-tabs::-webkit-scrollbar-corner { background: transparent; }
 .reg-tab {
   flex: 1 0 auto; scroll-snap-align: center;
   border: 0; background: transparent; cursor: pointer;
@@ -2031,6 +2054,14 @@ a.nav-menu-all:hover { gap: .9rem; color: var(--pine-deep); }
 .detail-cta { justify-content: center; margin-top: clamp(1.4rem, 3vw, 2rem); }
 .detail-h2 { font-size: clamp(1.9rem, 3.8vw, 2.9rem); margin-top: .9rem; }
 .detail-para { margin-top: 1.05rem; }
+/* `.fb-photo` is built to fill the dark home page band, so it carries
+   `min-height: 100%`. In the overview split that stretches the figure to the
+   height of the text column while the image keeps its own height, leaving a gap
+   with the caption stranded at the bottom. Here the figure sizes to the image
+   instead, so the caption sits on the photo and the card reads as one piece. */
+.detail-figure { min-height: 0; aspect-ratio: 4 / 3; align-self: center; }
+.detail-figure figcaption { padding: 2.5rem 1.4rem 1.25rem; font-size: 1rem; }
+@media (max-width: 900px) { .detail-figure { align-self: stretch; } }
 a.pchip-link { transition: border-color .18s var(--ease), color .18s var(--ease), transform .18s var(--ease), box-shadow .25s var(--ease); }
 a.pchip-link:hover { border-color: var(--pine); color: var(--pine-deep); transform: translateY(-2px); box-shadow: var(--sh-md); }
 @media (prefers-reduced-motion: reduce) { a.pchip-link:hover { transform: none; } }
@@ -2082,3 +2113,94 @@ a.pchip-link:hover { border-color: var(--pine); color: var(--pine-deep); transfo
 .notfound { min-height: calc(100vh - var(--nav-h)); display: grid; align-content: center; }
 .notfound-cta { justify-content: center; margin-top: clamp(1.5rem, 3vw, 2.1rem); }
 .notfound-links { margin-top: clamp(1.5rem, 3vw, 2.1rem); }
+
+/* ============ SERVICE SHOWCASE (autism care services) ============ */
+/* An elevated variant of the plain cards grid: one featured card at double
+   width, the rest at normal weight, all lifting on hover. Eight cards fill
+   three rows exactly because the featured card spans two columns. */
+.care-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(.9rem, 1.8vw, 1.4rem);
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+@media (max-width: 900px) { .care-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .care-grid { grid-template-columns: 1fr; } }
+
+.care-card {
+  position: relative;
+  display: flex; flex-direction: column;
+  padding: clamp(1.35rem, 2.3vw, 1.7rem);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-sm);
+  /* transform only — hovering never reflows the grid */
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
+}
+.care-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--sh-lg);
+  border-color: color-mix(in srgb, var(--pine) 38%, var(--line));
+}
+.care-card:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+.care-ico {
+  width: 48px; height: 48px; border-radius: var(--r-sm);
+  display: grid; place-items: center; flex: none;
+  margin-bottom: 1.05rem;
+  background: var(--sage-tint); color: var(--pine-deep);
+  transition: transform .3s var(--ease), background .3s var(--ease);
+}
+.care-card:hover .care-ico { transform: translateY(-2px) scale(1.06); }
+
+.care-card h3 { font-size: 1.14rem; letter-spacing: -.018em; line-height: 1.28; }
+.care-card p {
+  margin-top: .5rem; flex: 1;
+  color: var(--ink-soft); font-size: .92rem; line-height: 1.55;
+}
+/* pushed to the card foot by the paragraph's flex:1, so every card lines up */
+.care-more { margin-top: .9rem; min-height: 0; }
+
+/* The featured card. Fixed dark-teal hexes rather than palette tokens, exactly
+   as `.feature-band` does — the `--pine-*` ramp inverts in dark mode, which
+   would turn this panel near-white and strand the white text on it. The pine
+   border and accent glow are what make it read as featured in dark mode. */
+.care-card.is-featured {
+  grid-column: span 2;
+  overflow: hidden;
+  box-shadow: var(--sh-md);
+  /* saturated enough to lift off the dark cards behind it, dark enough to keep
+     white text legible on the light theme's white cards too */
+  background: linear-gradient(150deg, #12574e, #0b3b35 62%, #082e2a);
+  border-color: color-mix(in srgb, var(--pine) 55%, transparent);
+  color: #fff;
+}
+@media (max-width: 600px) { .care-card.is-featured { grid-column: span 1; } }
+/* a teal bloom rather than the apricot one used on full-width bands — apricot
+   over this dark green mixes to a muddy brown at these opacities */
+.care-card.is-featured::after {
+  content: ""; position: absolute; top: -140px; right: -90px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: #3fd0bb; filter: blur(70px); opacity: .22;
+  pointer-events: none;
+}
+.care-card.is-featured > * { position: relative; z-index: 1; }
+.care-card.is-featured:hover { box-shadow: var(--sh-lg); border-color: color-mix(in srgb, var(--pine) 70%, transparent); }
+.care-card.is-featured .care-ico { background: rgba(255, 255, 255, .12); color: #7fe3d2; }
+.care-card.is-featured h3 { color: #fff; font-size: clamp(1.3rem, 2.1vw, 1.55rem); }
+.care-card.is-featured p { color: #cfeae4; font-size: 1rem; }
+.care-card.is-featured .arrow-link,
+.care-card.is-featured .arrow-link:hover { color: #fff; }
+@media (min-width: 901px) { .care-card.is-featured p { max-width: 60ch; } }
+
+/* touch devices keep the resting state — no sticky hover after a tap */
+@media (hover: none) {
+  .care-card:hover { transform: none; box-shadow: var(--sh-sm); }
+  .care-card.is-featured:hover { box-shadow: var(--sh-md); }
+  .care-card:hover .care-ico { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .care-card, .care-ico { transition: none; }
+  .care-card:hover, .care-card:hover .care-ico { transform: none; }
+}

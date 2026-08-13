@@ -1,6 +1,25 @@
 import type { IconName } from '@/components/CategoryIcon';
 
-export type Card = { title: string; text: string };
+/** Icon keys for showcase cards, mapped to the shared icon set in `Icons.tsx`. */
+export type CardIcon =
+  | 'behavioral'
+  | 'speech'
+  | 'occupational'
+  | 'physical'
+  | 'counseling'
+  | 'pediatric'
+  | 'family'
+  | 'progress';
+
+export type Card = {
+  title: string;
+  text: string;
+  /** The three below are only read by the showcase variant of the cards grid. */
+  icon?: CardIcon;
+  /** Where the card's "Learn more" affordance points. Omit for no affordance. */
+  href?: string;
+  featured?: boolean;
+};
 
 export type AudienceGroup = {
   tag: string;
@@ -25,7 +44,7 @@ export type Cta = {
  * dynamic route and a single renderer can drive both — only the copy differs.
  */
 export type Detail = {
-  kind: 'service' | 'ecosystem';
+  kind: 'service' | 'ecosystem' | 'page';
   slug: string;
   /** Category name, kept identical to the wording used on the home page. */
   name: string;
@@ -39,7 +58,14 @@ export type Detail = {
   /** Optional so a page can be published before its photography exists. */
   image?: { src: string; alt: string; caption: string };
   overview: { heading: string; paragraphs: string[]; highlights: string[] };
-  provides: { eyebrow: string; heading: string; intro: string; cards: Card[] };
+  provides: {
+    eyebrow: string;
+    heading: string;
+    intro: string;
+    cards: Card[];
+    /** Renders the elevated card showcase instead of the plain cards grid. */
+    showcase?: boolean;
+  };
   audience: { eyebrow: string; heading: string; groups: AudienceGroup[] };
   benefits: { eyebrow: string; heading: string; intro: string; cards: Card[] };
   support: { eyebrow: string; heading: string; text: string; points: string[]; quote: string; quoteWho: string };

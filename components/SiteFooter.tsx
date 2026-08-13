@@ -13,7 +13,7 @@ export default function SiteFooter({ base = '' }: { base?: string }) {
         <div className="ft-grid">
           <div className="ft-brandcol">
             <a className="brand" href={`${base}#top`} aria-label="URIBCARE home">
-              <img className="brand-logo" src="/images/logo.png" alt="URIBCARE" width={164} height={55} />
+              <img className="brand-logo" src="/images/logo.png" alt="URIBCARE" width={200} height={67} />
             </a>
             <p>
               Connecting care, simplifying healthcare. One platform, multiple healthcare services, one connected
@@ -34,7 +34,7 @@ export default function SiteFooter({ base = '' }: { base?: string }) {
           <nav className="ft-col" aria-label="Care">
             <h5>Care</h5>
             <div className="ft-links">
-              <a href={`${base}#autism`}>Autism care</a>
+              <a href="/autism-care">Autism care</a>
               <a href={`${base}#ecosystem`}>Therapy &amp; counseling</a>
               <a href={`${base}#ecosystem`}>Diagnostics</a>
               <a href={`${base}#faq`}>FAQ</a>

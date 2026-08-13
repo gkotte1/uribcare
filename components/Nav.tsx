@@ -16,11 +16,12 @@ const MENUS: Record<MenuId, { items: NavItem[]; allLabel: string }> = {
   ecosystem: { items: ECOSYSTEM_NAV, allLabel: 'View the ecosystem section' },
 };
 
-const LINKS: { href: string; label: string; menu?: MenuId }[] = [
+/** `route: true` marks a link to its own page rather than a home page section. */
+const LINKS: { href: string; label: string; menu?: MenuId; route?: boolean }[] = [
   { href: '#services', label: 'Services', menu: 'services' },
   { href: '#ecosystem', label: 'Ecosystem', menu: 'ecosystem' },
   { href: '#journey', label: 'How it works' },
-  { href: '#autism', label: 'Autism care' },
+  { href: '/autism-care', label: 'Autism care', route: true },
   { href: '#trust', label: 'Security' },
 ];
 
@@ -59,7 +60,7 @@ export default function Nav() {
   // highlight the section currently in view (home page only)
   useEffect(() => {
     if (!isHome) return;
-    const ids = LINKS.map((l) => l.href.slice(1));
+    const ids = LINKS.filter((l) => !l.route).map((l) => l.href.slice(1));
     const sections = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el));
@@ -157,12 +158,20 @@ export default function Nav() {
         />
         <div className="wrap nav-inner">
           <a className="brand" href={`${base}#top`} aria-label="URIBCARE home" onClick={close}>
-            <img className="brand-logo" src="/images/logo.png" alt="URIBCARE" width={164} height={55} />
+            <img className="brand-logo" src="/images/logo.png" alt="URIBCARE" width={200} height={67} decoding="sync" />
           </a>
 
           <nav className="nav-links" aria-label="Primary">
             {LINKS.map((l) => {
-              const isActive = isHome && active === l.href.slice(1);
+              const isActive = l.route ? pathname === l.href : isHome && active === l.href.slice(1);
+
+              if (l.route) {
+                return (
+                  <Link key={l.href} href={l.href} aria-current={isActive ? 'true' : undefined} onClick={close}>
+                    {l.label}
+                  </Link>
+                );
+              }
 
               if (!l.menu) {
                 return (
@@ -255,7 +264,20 @@ export default function Nav() {
       <div className={`nav-drawer${open ? ' open' : ''}`} id="nav-drawer" hidden={!open}>
         <nav aria-label="Mobile">
           {LINKS.map((l) =>
-            l.menu ? (
+            l.route ? (
+              <Link
+                key={l.href}
+                className="dl"
+                href={l.href}
+                aria-current={pathname === l.href ? 'true' : undefined}
+                onClick={close}
+              >
+                {l.label}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </Link>
+            ) : l.menu ? (
               // the section link, followed by its individual detail pages
               <div className="drawer-group" key={l.href}>
                 <a className="dl" href={`${base}${l.href}`} onClick={close}>
