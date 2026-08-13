@@ -1,10 +1,17 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+
+  // On the home page the section links stay as in-page anchors; anywhere else
+  // they need to point back at the home page first.
+  const base = pathname === '/' ? '' : '/';
 
   // nav scrolled state
   useEffect(() => {
@@ -26,15 +33,15 @@ export default function Nav() {
   return (
     <header className={`nav${scrolled ? ' scrolled' : ''}`} id="nav">
       <div className="wrap nav-inner">
-        <a className="brand" href="#top" aria-label="URIBCARE home">
+        <a className="brand" href={`${base}#top`} aria-label="URIBCARE home">
           <img className="brand-logo" src="/images/logo.png" alt="URIBCARE" width={164} height={55} />
         </a>
         <nav className="nav-links" aria-label="Primary">
-          <a href="#services">Services</a>
-          <a href="#ecosystem">Ecosystem</a>
-          <a href="#journey">How it works</a>
-          <a href="#autism">Autism care</a>
-          <a href="#trust">Security</a>
+          <a href={`${base}#services`}>Services</a>
+          <a href={`${base}#ecosystem`}>Ecosystem</a>
+          <a href={`${base}#journey`}>How it works</a>
+          <a href={`${base}#autism`}>Autism care</a>
+          <a href={`${base}#trust`}>Security</a>
         </nav>
         <div className="nav-cta">
           <button
@@ -57,10 +64,13 @@ export default function Nav() {
               </g>
             </svg>
           </button>
-          <a href="#contact" className="btn btn-ghost">
+          <a href={`${base}#contact`} className="btn btn-ghost">
             Book a demo
           </a>
-          <a href="#contact" className="btn btn-primary">
+          <Link href="/register" className="btn btn-ghost">
+            Registration
+          </Link>
+          <a href={`${base}#contact`} className="btn btn-primary">
             Start free trial
           </a>
         </div>
