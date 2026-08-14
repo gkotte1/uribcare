@@ -221,16 +221,6 @@ export default function Nav() {
           </nav>
 
           <div className="nav-cta">
-            <button className="icon-btn theme-toggle" id="themeBtn" aria-label="Toggle light and dark theme" onClick={toggleTheme}>
-              <svg className="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="4.2" />
-                <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" />
-              </svg>
-              <svg className="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" />
-              </svg>
-            </button>
-
             <a href={`${base}#contact`} className="btn btn-quiet nav-hide-md">
               Book a demo
             </a>
@@ -240,6 +230,17 @@ export default function Nav() {
             <a href={`${base}#contact`} className="btn btn-primary">
               Start free trial
             </a>
+
+            {/* last control on the right, after the CTAs */}
+            <button className="icon-btn theme-toggle" id="themeBtn" aria-label="Toggle light and dark theme" onClick={toggleTheme}>
+              <svg className="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="4.2" />
+                <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" />
+              </svg>
+              <svg className="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" />
+              </svg>
+            </button>
 
             <button
               className="icon-btn nav-burger"

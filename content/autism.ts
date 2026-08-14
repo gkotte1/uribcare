@@ -19,9 +19,11 @@ export const AUTISM_CARE: Detail = {
   metaDescription:
     'Coordinated autism care on Uribcare: assessment, diagnosis, a personalized plan, therapy, progress tracking and family support — with every provider working from one shared record.',
   image: {
-    src: '/images/hero-physio-child.jpg',
-    alt: 'A therapist supporting a young child through a one-to-one session at a low table',
+    src: '/images/autism-care-session.jpg',
+    alt: 'A therapist and a young boy high-fiving across a table during a play-based session, with stacking toys and coloured blocks in front of them and a poster reading “Potential, Progress, Possibilities” on the wall behind',
     caption: 'Care that follows the child — across every provider, over years rather than appointments.',
+    // the photo is 1672x941, so the frame matches it and nothing is cropped
+    aspect: '16 / 9',
   },
   overview: {
     heading: 'Autism care is a team sport played over years',

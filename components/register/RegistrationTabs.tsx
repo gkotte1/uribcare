@@ -40,22 +40,33 @@ export default function RegistrationTabs() {
 
   return (
     <div className="reg-shell">
-      <div className="reg-tabs" role="tablist" aria-label="Registration type" ref={tabsRef} onKeyDown={onKeyDown}>
-        {TABS.map((tab, index) => (
-          <button
-            key={tab.id}
-            type="button"
-            className="reg-tab"
-            role="tab"
-            id={`tab-${tab.id}`}
-            aria-selected={index === active}
-            aria-controls={`panel-${tab.id}`}
-            tabIndex={index === active ? 0 : -1}
-            onClick={() => setActive(index)}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* The capsule is a plain frame; the inner track is what scrolls, so the
+          scrollbar is drawn inside the capsule's padding rather than across its
+          rounded bottom edge. */}
+      <div className="reg-tabs">
+        <div
+          className="reg-tabs-track"
+          role="tablist"
+          aria-label="Registration type"
+          ref={tabsRef}
+          onKeyDown={onKeyDown}
+        >
+          {TABS.map((tab, index) => (
+            <button
+              key={tab.id}
+              type="button"
+              className="reg-tab"
+              role="tab"
+              id={`tab-${tab.id}`}
+              aria-selected={index === active}
+              aria-controls={`panel-${tab.id}`}
+              tabIndex={index === active ? 0 : -1}
+              onClick={() => setActive(index)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="reg-panel" role="tabpanel" id={`panel-${id}`} aria-labelledby={`tab-${id}`} tabIndex={-1}>

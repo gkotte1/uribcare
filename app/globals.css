@@ -1808,11 +1808,21 @@ footer.ft::before {
 
 .reg-shell { max-width: 980px; margin: clamp(1.9rem, 4vw, 2.8rem) auto 0; }
 
+/* The capsule itself never scrolls — it is only the rounded frame. `overflow:
+   hidden` keeps everything clipped to the pill shape. */
 .reg-tabs {
-  display: flex; gap: .35rem; padding: .4rem;
+  padding: .4rem;
   background: var(--card); border: 1px solid var(--line);
   border-radius: var(--r-pill); box-shadow: var(--sh-sm);
-  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity;
+  overflow: hidden;
+}
+/* The inner track is the scroller. Because it sits inside the capsule's
+   padding, its scrollbar is drawn within the capsule and along the straight
+   part of the bottom edge — never across the rounded ends, never below it. */
+.reg-tabs-track {
+  display: flex; gap: .35rem;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x proximity;
   overscroll-behavior-x: contain;
   /* keeps the first and last tab fully reachable when snapped */
   scroll-padding-inline: .4rem;
@@ -1821,20 +1831,25 @@ footer.ft::before {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--pine) 40%, transparent) transparent;
 }
-/* WebKit: the scroll affordance sits inside the capsule — no track, and a thumb
-   inset by a transparent border so it never touches the rounded edge. */
-.reg-tabs::-webkit-scrollbar { height: 8px; }
-.reg-tabs::-webkit-scrollbar-track { background: transparent; border-radius: var(--r-pill); }
-.reg-tabs::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--pine) 38%, transparent);
-  border: 2px solid transparent; background-clip: padding-box;
+.reg-tabs-track::-webkit-scrollbar { height: 6px; }
+/* Windows/Linux WebKit draws stepper arrows at each end of the track by
+   default. Those are the arrow controls — removed here, so the bar is a plain
+   thumb and scrolling stays drag/swipe/wheel only. */
+.reg-tabs-track::-webkit-scrollbar-button,
+.reg-tabs-track::-webkit-scrollbar-button:start,
+.reg-tabs-track::-webkit-scrollbar-button:end,
+.reg-tabs-track::-webkit-scrollbar-button:horizontal:decrement,
+.reg-tabs-track::-webkit-scrollbar-button:horizontal:increment {
+  display: none !important; width: 0; height: 0;
+}
+.reg-tabs-track::-webkit-scrollbar-track,
+.reg-tabs-track::-webkit-scrollbar-track-piece { background: transparent; border-radius: var(--r-pill); }
+.reg-tabs-track::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--pine) 42%, transparent);
   border-radius: var(--r-pill);
 }
-.reg-tabs::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--pine) 62%, transparent);
-  background-clip: padding-box;
-}
-.reg-tabs::-webkit-scrollbar-corner { background: transparent; }
+.reg-tabs-track::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--pine) 65%, transparent); }
+.reg-tabs-track::-webkit-scrollbar-corner { background: transparent; }
 .reg-tab {
   flex: 1 0 auto; scroll-snap-align: center;
   border: 0; background: transparent; cursor: pointer;
@@ -2059,7 +2074,7 @@ a.nav-menu-all:hover { gap: .9rem; color: var(--pine-deep); }
    height of the text column while the image keeps its own height, leaving a gap
    with the caption stranded at the bottom. Here the figure sizes to the image
    instead, so the caption sits on the photo and the card reads as one piece. */
-.detail-figure { min-height: 0; aspect-ratio: 4 / 3; align-self: center; }
+.detail-figure { min-height: 0; aspect-ratio: var(--figure-aspect, 4 / 3); align-self: center; }
 .detail-figure figcaption { padding: 2.5rem 1.4rem 1.25rem; font-size: 1rem; }
 @media (max-width: 900px) { .detail-figure { align-self: stretch; } }
 a.pchip-link { transition: border-color .18s var(--ease), color .18s var(--ease), transform .18s var(--ease), box-shadow .25s var(--ease); }
@@ -2095,7 +2110,9 @@ a.pchip-link:hover { border-color: var(--pine); color: var(--pine-deep); transfo
 .detail-main .cta-final {
   position: relative; overflow: hidden; text-align: center;
   border-radius: var(--r-lg); padding: clamp(2.6rem, 6vw, 4.6rem) clamp(1.4rem, 4vw, 3rem);
-  background: linear-gradient(150deg, var(--pine), var(--pine-deep) 60%, var(--pine-ink));
+  /* fixed hexes, not the --pine-* ramp: that ramp inverts in dark mode and
+     turned this panel near-white, stranding the white heading on it */
+  background: linear-gradient(150deg, #12574e, #0b3b35 62%, #082e2a);
   color: #fff; box-shadow: var(--sh-lg);
 }
 :root[data-theme="dark"] .detail-main .cta-final { border: 1px solid var(--line-2); }

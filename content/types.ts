@@ -56,7 +56,14 @@ export type Detail = {
   subtitle: string;
   metaDescription: string;
   /** Optional so a page can be published before its photography exists. */
-  image?: { src: string; alt: string; caption: string };
+  image?: {
+    src: string;
+    alt: string;
+    caption: string;
+    /** CSS aspect-ratio for the figure. Defaults to 4 / 3 — set it to the
+     *  photo's own ratio so the frame never crops the composition. */
+    aspect?: string;
+  };
   overview: { heading: string; paragraphs: string[]; highlights: string[] };
   provides: {
     eyebrow: string;

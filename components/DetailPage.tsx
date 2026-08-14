@@ -98,7 +98,6 @@ export default function DetailPage({
     );
   };
 
-  // One list of steps, shared by both journey arrangements.
   const journeySteps = process.steps.map((step, i) => (
     <li className="jrow reveal" key={step.title} style={{ '--i': i } as React.CSSProperties}>
       <div className="jnum" aria-hidden="true">
@@ -112,23 +111,14 @@ export default function DetailPage({
     </li>
   ));
 
-  const processSection = featuredJourney ? (
-    // Same structure as the home page patient journey: sticky heading column on
-    // the left from 1000px up, steps scrolling past it on the right.
-    <section className="band">
+  // The one journey arrangement, shared with the home page patient journey:
+  // `.journey-layout` puts a sticky `.journey-head` beside the scrolling steps
+  // from 1000px up, and collapses to a single stacked column below that.
+  // `featuredJourney` only decides where the section sits on the page.
+  const processSection = (
+    <section className="band" style={featuredJourney ? undefined : { paddingTop: 0 }}>
       <div className="wrap journey-layout">
         <div className="journey-head reveal">
-          <span className="eyebrow">{process.eyebrow}</span>
-          <h2>{process.heading}</h2>
-          <p className="lead">{process.intro}</p>
-        </div>
-        <ol className="journey">{journeySteps}</ol>
-      </div>
-    </section>
-  ) : (
-    <section className="band" style={{ paddingTop: 0 }}>
-      <div className="wrap">
-        <div className="band-head reveal">
           <span className="eyebrow">{process.eyebrow}</span>
           <h2>{process.heading}</h2>
           <p className="lead">{process.intro}</p>
@@ -197,7 +187,10 @@ export default function DetailPage({
                     </p>
                   ))}
                 </div>
-                <figure className="fb-photo detail-figure reveal">
+                <figure
+                  className="fb-photo detail-figure reveal"
+                  style={image.aspect ? ({ '--figure-aspect': image.aspect } as React.CSSProperties) : undefined}
+                >
                   <img src={image.src} alt={image.alt} />
                   <figcaption>{image.caption}</figcaption>
                 </figure>
