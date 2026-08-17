@@ -544,6 +544,65 @@ footer .brand-logo { height: 40px; }
 .drawer-actions { display: grid; gap: .6rem; margin-top: 1.3rem; }
 .drawer-actions .btn { width: 100%; }
 
+/* ---- EN / ES language switch ---- */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  flex: none;
+  background: var(--paper-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+}
+.lang-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 32px;
+  padding: 0 .55rem;
+  border-radius: var(--r-pill);
+  font-family: var(--sans);
+  font-size: .785rem;
+  font-weight: 650;
+  letter-spacing: .04em;
+  color: var(--ink-faint);
+  transition: color .18s var(--ease), background .18s var(--ease), box-shadow .18s var(--ease);
+}
+.lang-opt:hover { color: var(--pine-deep); background: var(--card); }
+.lang-opt:focus-visible { outline: 2.5px solid var(--focus); outline-offset: 2px; }
+/* the selected language is the one filled in — obvious at a glance */
+.lang-opt[aria-current="true"] {
+  background: var(--pine);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(8, 40, 35, .18);
+  cursor: default;
+}
+:root[data-theme="dark"] .lang-opt[aria-current="true"] { color: #042320; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lang-opt[aria-current="true"] { color: #042320; }
+}
+
+/* drawer variant: label on the left, switch on the right */
+.drawer-lang {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .35rem 0 .9rem;
+  margin-bottom: .35rem;
+  border-bottom: 1px solid var(--line);
+}
+.drawer-lang-label {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.drawer-lang .lang-switch { background: var(--card); }
+
 .nav-scrim {
   position: fixed; inset: 0; z-index: 88;
   background: color-mix(in srgb, var(--ink) 32%, transparent);
@@ -552,13 +611,38 @@ footer .brand-logo { height: 40px; }
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-@media (max-width: 1080px) {
+/* Hands over to the burger at 1200px rather than 1080px. Adding the EN/ES switch
+   to the bar left the 1081–1200px band unable to hold the links and the CTA
+   cluster at once, and in that band the burger was still hidden — so trimming
+   buttons there would have made /register unreachable. Below 1200px the drawer
+   carries the full set instead. */
+@media (max-width: 1200px) {
   .nav-links { display: none; }
   .nav-burger { display: grid; }
   .nav-cta .nav-hide-md { display: none; }
 }
+/* Spanish labels are materially longer than the English ones ("Atención del
+   autismo" vs "Autism care", "Agendar una demostración" vs "Book a demo"), which
+   pushed the bar past the viewport at ~1440px. Retiring the secondary demo CTA
+   earlier in Spanish buys back the space; it stays reachable in the drawer, and
+   it points at the same #contact anchor as the primary button. Scoped to
+   [data-locale="es"] so the English bar is untouched at every width. */
+@media (max-width: 1500px) {
+  .nav-cta[data-locale="es"] .nav-hide-md { display: none; }
+}
+/* Spanish also retires the Registration button before the bar gets tight; it is
+   still in the drawer, and /register itself is unaffected. */
+@media (max-width: 1180px) {
+  .nav-cta[data-locale="es"] .nav-hide-sm { display: none; }
+}
+
 @media (max-width: 560px) {
   .nav-cta .nav-hide-sm { display: none; }
+}
+/* The language switch stays in the bar until the burger takes over, so there is
+   never a width where neither the switch nor the drawer is reachable. */
+@media (max-width: 460px) {
+  .nav-cta .nav-lang { display: none; }
 }
 /* On the narrowest phones the bar can only hold the icons. Both CTAs stay
    reachable — they are in the drawer and in the sticky bottom bar. */
@@ -566,7 +650,7 @@ footer .brand-logo { height: 40px; }
   .nav-cta .btn { display: none; }
   .nav-cta { gap: .4rem; }
 }
-@media (min-width: 1081px) {
+@media (min-width: 1201px) {
   .nav-drawer, .nav-scrim { display: none !important; }
 }
 
