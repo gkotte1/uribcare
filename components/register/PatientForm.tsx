@@ -1,15 +1,10 @@
 'use client';
 
 import { ChoiceGroup, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
-import {
-  GENDERS,
-  PATIENT_PROBLEMS,
-  PATIENT_TYPES,
-  RELATIONSHIPS,
-  THERAPY_SUPPORT,
-  US_STATES,
-  YES_NO,
-} from './options';
+import { usePathname } from 'next/navigation';
+import { getDictionary } from '@/content/dictionary';
+import { localeFromPath } from '@/lib/i18n';
+import { optionsFor } from './optionsFor';
 import { useRegForm } from './useRegForm';
 import { email, onlyIf, pastDate, phone, required, requiredChoice, zip } from './validate';
 
@@ -56,19 +51,23 @@ const ageFromDob = (dob: string) => {
 };
 
 export default function PatientForm() {
+  const locale = localeFromPath(usePathname() || '/');
+  const d = getDictionary(locale).register;
+  const t = d.forms.patient;
+  const o = optionsFor(locale);
   const form = useRegForm('patient', INITIAL, (v) => ({
-    firstName: [required('Please enter the first name.')],
-    lastName: [required('Please enter the last name.')],
-    dob: [required('Please enter a date of birth.'), pastDate],
-    phone: [required('Please enter a phone number.'), phone],
-    email: [required('Please enter an email address.'), email],
+    firstName: [required(d.validation.required)],
+    lastName: [required(d.validation.required)],
+    dob: [required(d.validation.required), pastDate],
+    phone: [required(d.validation.required), phone],
+    email: [required(d.validation.required), email],
     zip: [zip],
-    patientType: [requiredChoice('Please choose a patient type.')],
-    problem: [requiredChoice('Please choose the reason for care.')],
-    problemOther: [onlyIf(v.problem === 'Other', required('Please specify the reason for care.'))],
-    therapyOther: [onlyIf(v.therapy === 'Other', required('Please specify the support required.'))],
-    guardianName: [onlyIf(v.isMinor === 'Yes', required('Please enter the parent or guardian name.'))],
-    guardianPhone: [onlyIf(v.isMinor === 'Yes', required('Please enter a parent or guardian phone number.')), phone],
+    patientType: [requiredChoice(d.validation.choice)],
+    problem: [requiredChoice(d.validation.choice)],
+    problemOther: [onlyIf(v.problem === 'Other', required(d.validation.required))],
+    therapyOther: [onlyIf(v.therapy === 'Other', required(d.validation.required))],
+    guardianName: [onlyIf(v.isMinor === 'Yes', required(d.validation.required))],
+    guardianPhone: [onlyIf(v.isMinor === 'Yes', required(d.validation.required)), phone],
     guardianEmail: [email],
   }));
 
@@ -76,27 +75,27 @@ export default function PatientForm() {
 
   if (status === 'submitted' && form.submission) {
     return (
-      <FormCard title="Patient Registration Form">
+      <FormCard title={t.title}>
         <SuccessPanel
-          heading="Registration received"
+          heading={d.common.received}
           submission={form.submission}
-          note="Our care team will review the details and reach out to match you with the right providers."
+          note={t.successNote}
         />
       </FormCard>
     );
   }
 
   return (
-    <FormCard title="Patient Registration Form" intro="Tell us who needs care and what kind of support they're looking for.">
+    <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
-        <FormSection legend="Patient details">
+        <FormSection legend={d.sections.patientDetails}>
           <Grid>
-            <TextField form={form} name="firstName" label="First Name" required autoComplete="given-name" />
-            <TextField form={form} name="lastName" label="Last Name" required autoComplete="family-name" />
+            <TextField form={form} name="firstName" label={d.fields.firstName} required autoComplete="given-name" />
+            <TextField form={form} name="lastName" label={d.fields.lastName} required autoComplete="family-name" />
             <TextField
               form={form}
               name="dob"
-              label="Date of Birth"
+              label={d.fields.dob}
               type="date"
               required
               onChangeValue={(value) => form.patch({ dob: value, age: ageFromDob(value) })}
@@ -104,82 +103,82 @@ export default function PatientForm() {
             <TextField
               form={form}
               name="age"
-              label="Age"
+              label={d.fields.age}
               type="number"
               inputMode="numeric"
               min="0"
               max="130"
-              hint="Filled in from the date of birth — edit if needed."
+              hint={t.ageHint}
             />
-            <SelectField form={form} name="gender" label="Gender" options={GENDERS} />
-            <TextField form={form} name="phone" label="Phone Number" type="tel" required autoComplete="tel" />
-            <TextField form={form} name="email" label="Email Address" type="email" required autoComplete="email" span />
+            <SelectField form={form} name="gender" label={d.fields.gender} options={o.genders} />
+            <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
+            <TextField form={form} name="email" label={d.fields.email} type="email" required autoComplete="email" span />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Address">
+        <FormSection legend={d.sections.address}>
           <Grid>
-            <TextField form={form} name="address" label="Address" autoComplete="street-address" span />
+            <TextField form={form} name="address" label={d.fields.address} autoComplete="street-address" span />
           </Grid>
           <Grid cols={3}>
-            <TextField form={form} name="city" label="City" autoComplete="address-level2" />
-            <SelectField form={form} name="state" label="State" options={US_STATES} />
-            <TextField form={form} name="zip" label="ZIP Code" inputMode="numeric" autoComplete="postal-code" />
+            <TextField form={form} name="city" label={d.fields.city} autoComplete="address-level2" />
+            <SelectField form={form} name="state" label={d.fields.state} options={o.states} />
+            <TextField form={form} name="zip" label={d.fields.zip} inputMode="numeric" autoComplete="postal-code" />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Care needed">
+        <FormSection legend={d.sections.careNeeded}>
           <Grid>
-            <SelectField form={form} name="patientType" label="Patient Type" options={PATIENT_TYPES} required placeholder="Select patient type" />
+            <SelectField form={form} name="patientType" label={t.patientType} options={o.patientTypes} required placeholder={t.selectPatientType} />
             <SelectField
               form={form}
               name="problem"
-              label="Problem / Reason for Care"
-              options={PATIENT_PROBLEMS}
+              label={t.problem}
+              options={o.patientProblems}
               required
-              placeholder="Select problem"
+              placeholder={t.selectProblem}
               onChangeValue={(value) =>
                 form.patch({ problem: value, problemOther: value === 'Other' ? values.problemOther : '' })
               }
             />
             {values.problem === 'Other' ? (
-              <TextField form={form} name="problemOther" label="Please specify" required span />
+              <TextField form={form} name="problemOther" label={d.common.pleaseSpecify} required span />
             ) : null}
             <SelectField
               form={form}
               name="therapy"
-              label="Therapy / Support Required"
-              options={THERAPY_SUPPORT}
-              placeholder="Select service"
+              label={t.therapy}
+              options={o.therapySupport}
+              placeholder={t.selectService}
               onChangeValue={(value) =>
                 form.patch({ therapy: value, therapyOther: value === 'Other' ? values.therapyOther : '' })
               }
             />
             {values.therapy === 'Other' ? (
-              <TextField form={form} name="therapyOther" label="Please specify" required />
+              <TextField form={form} name="therapyOther" label={d.common.pleaseSpecify} required />
             ) : null}
             <TextareaField
               form={form}
               name="message"
-              label="Message / Additional Information"
-              placeholder="Anything else the care team should know."
+              label={d.fields.message}
+              placeholder={t.messagePlaceholder}
             />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Parent / guardian">
-          <ChoiceGroup form={form} name="isMinor" label="Is the patient a minor?" options={YES_NO} mode="single" />
+        <FormSection legend={d.sections.guardian}>
+          <ChoiceGroup form={form} name="isMinor" label={t.isMinor} options={o.yesNo} mode="single" />
           {values.isMinor === 'Yes' ? (
             <Grid>
-              <TextField form={form} name="guardianName" label="Parent / Guardian Name" required />
-              <SelectField form={form} name="guardianRelationship" label="Relationship to Patient" options={RELATIONSHIPS} />
-              <TextField form={form} name="guardianPhone" label="Parent / Guardian Phone" type="tel" required />
-              <TextField form={form} name="guardianEmail" label="Parent / Guardian Email" type="email" />
+              <TextField form={form} name="guardianName" label={t.guardianName} required />
+              <SelectField form={form} name="guardianRelationship" label={t.relationship} options={o.relationships} />
+              <TextField form={form} name="guardianPhone" label={t.guardianPhone} type="tel" required />
+              <TextField form={form} name="guardianEmail" label={t.guardianEmail} type="email" />
             </Grid>
           ) : null}
         </FormSection>
 
-        <SubmitRow label="Register Patient" submitting={status === 'submitting'} />
+        <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>
   );

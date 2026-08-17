@@ -1,7 +1,10 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { ACCEPTED_UPLOAD_LABEL, ACCEPTED_UPLOAD_TYPES } from './validate';
+import { getDictionary } from '@/content/dictionary';
+import { localeFromPath } from '@/lib/i18n';
+import { ACCEPTED_UPLOAD_TYPES } from './validate';
 import type { FieldValue, Values } from './validate';
 import type { Submission } from './useRegForm';
 
@@ -131,10 +134,11 @@ export function SelectField({
   required,
   hint,
   span,
-  placeholder = 'Select',
+  placeholder,
   disabled,
   onChangeValue,
 }: SelectFieldProps) {
+  const t = getDictionary(localeFromPath(usePathname() || '/')).register.common;
   return (
     <FieldShell form={form} name={name} label={label} required={required} hint={hint} span={span}>
       {(aria) => (
@@ -146,7 +150,7 @@ export function SelectField({
           onChange={(e) => (onChangeValue ? onChangeValue(e.target.value) : form.set(name, e.target.value))}
         >
           <option value="" disabled>
-            {placeholder}
+            {placeholder ?? t.selectPlaceholder}
           </option>
           {options.map((opt) => (
             <option key={opt} value={opt}>
@@ -261,6 +265,7 @@ type FileFieldProps = {
  * endpoint is connected.
  */
 export function FileField({ form, name, label, required }: FileFieldProps) {
+  const t = getDictionary(localeFromPath(usePathname() || '/')).register.common;
   const value = form.values[name];
   const file = value instanceof File ? value : null;
   return (
@@ -269,7 +274,7 @@ export function FileField({ form, name, label, required }: FileFieldProps) {
       name={name}
       label={label}
       required={required}
-      hint={ACCEPTED_UPLOAD_LABEL}
+      hint={t.uploadHint}
       span
     >
       {(aria) => (
@@ -320,20 +325,21 @@ export function Grid({ cols = 2, children }: { cols?: 2 | 3; children: ReactNode
 }
 
 export function SubmitRow({ label, submitting }: { label: string; submitting: boolean }) {
+  const t = getDictionary(localeFromPath(usePathname() || '/')).register.common;
   return (
     <div className="reg-actions">
       <button type="submit" className="btn btn-primary btn-lg" disabled={submitting}>
-        {submitting ? 'Submitting…' : label}
+        {submitting ? t.submitting : label}
       </button>
       <p className="reg-note">
-        Fields marked <span className="req">*</span> are required. By submitting you agree to be contacted by URiBCARE
-        about this registration.
+        {t.requiredNote} <span className="req">*</span> {t.requiredNoteTail}
       </p>
     </div>
   );
 }
 
 export function SuccessPanel({ heading, submission, note }: { heading: string; submission: Submission; note: string }) {
+  const t = getDictionary(localeFromPath(usePathname() || '/')).register.common;
   return (
     <div className="form-success show" role="status" aria-live="polite">
       <div className="ok">
@@ -342,10 +348,10 @@ export function SuccessPanel({ heading, submission, note }: { heading: string; s
         </svg>
       </div>
       <h3>{heading}</h3>
-      <p className="reg-status">Status: {submission.status}</p>
+      <p className="reg-status">{t.status} {submission.status}</p>
       <p>{note}</p>
       <p className="reg-ref">
-        Reference <strong>{submission.reference}</strong>
+        {t.reference} <strong>{submission.reference}</strong>
       </p>
     </div>
   );

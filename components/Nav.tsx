@@ -7,22 +7,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import CategoryIcon from '@/components/CategoryIcon';
 import { ECOSYSTEM_NAV, SERVICE_NAV } from '@/content/nav';
 import type { NavItem } from '@/content/nav';
+import { getDictionary } from '@/content/dictionary';
+import { LOCALES, SHOW_LANGUAGE_SWITCHER, localeFromPath, localeHref, stripLocale } from '@/lib/i18n';
 
 type MenuId = 'services' | 'ecosystem';
 
-/** Category lists behind the Services and Ecosystem nav items. */
-const MENUS: Record<MenuId, { items: NavItem[]; allLabel: string }> = {
-  services: { items: SERVICE_NAV, allLabel: 'View the services section' },
-  ecosystem: { items: ECOSYSTEM_NAV, allLabel: 'View the ecosystem section' },
-};
-
 /** `route: true` marks a link to its own page rather than a home page section. */
-const LINKS: { href: string; label: string; menu?: MenuId; route?: boolean }[] = [
-  { href: '#services', label: 'Services', menu: 'services' },
-  { href: '#ecosystem', label: 'Ecosystem', menu: 'ecosystem' },
-  { href: '#journey', label: 'How it works' },
-  { href: '/autism-care', label: 'Autism care', route: true },
-  { href: '#trust', label: 'Security' },
+type NavLink = { href: string; labelKey: 'services' | 'ecosystem' | 'howItWorks' | 'autismCare' | 'security'; menu?: MenuId; route?: boolean };
+
+const LINKS: NavLink[] = [
+  { href: '#services', labelKey: 'services', menu: 'services' },
+  { href: '#ecosystem', labelKey: 'ecosystem', menu: 'ecosystem' },
+  { href: '#journey', labelKey: 'howItWorks' },
+  { href: '/autism-care', labelKey: 'autismCare', route: true },
+  { href: '#trust', labelKey: 'security' },
 ];
 
 const Caret = () => (
@@ -38,12 +36,23 @@ export default function Nav() {
   const [active, setActive] = useState<string>('');
   const [progress, setProgress] = useState(0);
   const headerRef = useRef<HTMLElement>(null);
-  const pathname = usePathname();
+  const pathname = usePathname() || '/';
+
+  // The URL is the source of truth for the language.
+  const locale = localeFromPath(pathname);
+  const t = getDictionary(locale);
+  const route = stripLocale(pathname);
+  const isHome = route === '/';
 
   // On the home page the section links stay as in-page anchors; anywhere else
-  // they need to point back at the home page first.
-  const base = pathname === '/' ? '' : '/';
-  const isHome = pathname === '/';
+  // they need to point back at the home page (in the current language) first.
+  const base = isHome ? '' : localeHref(locale, '/');
+  const path = (to: string) => localeHref(locale, to);
+
+  const MENUS: Record<MenuId, { items: NavItem[]; allLabel: string }> = {
+    services: { items: SERVICE_NAV[locale], allLabel: t.nav.viewServices },
+    ecosystem: { items: ECOSYSTEM_NAV[locale], allLabel: t.nav.viewEcosystem },
+  };
 
   // nav scrolled state + reading progress
   useEffect(() => {
@@ -137,7 +146,7 @@ export default function Nav() {
 
   const categoryLinks = (items: NavItem[]) =>
     items.map((item) => (
-      <Link className="nav-menu-item" href={item.href} key={item.slug} onClick={close}>
+      <Link className="nav-menu-item" href={path(item.href)} key={item.slug} onClick={close}>
         <span className="nav-menu-ico">
           <CategoryIcon name={item.icon} size={20} />
         </span>
@@ -156,19 +165,19 @@ export default function Nav() {
           style={{ width: '100%', transform: `scaleX(${progress})`, opacity: scrolled ? 1 : 0 }}
           aria-hidden="true"
         />
-        <div className="wrap nav-inner">
-          <a className="brand" href={`${base}#top`} aria-label="URIBCARE home" onClick={close}>
+        <div className="wrap wrap-wide nav-inner">
+          <a className="brand" href={`${base}#top`} aria-label={t.nav.home} onClick={close}>
             <img className="brand-logo" src="/images/logo.png" alt="URIBCARE" width={200} height={67} decoding="sync" />
           </a>
 
-          <nav className="nav-links" aria-label="Primary">
+          <nav className="nav-links" aria-label={t.nav.primaryLabel}>
             {LINKS.map((l) => {
-              const isActive = l.route ? pathname === l.href : isHome && active === l.href.slice(1);
+              const isActive = l.route ? route === l.href : isHome && active === l.href.slice(1);
 
               if (l.route) {
                 return (
-                  <Link key={l.href} href={l.href} aria-current={isActive ? 'true' : undefined} onClick={close}>
-                    {l.label}
+                  <Link key={l.href} href={path(l.href)} aria-current={isActive ? 'true' : undefined} onClick={close}>
+                    {t.nav[l.labelKey]}
                   </Link>
                 );
               }
@@ -176,7 +185,7 @@ export default function Nav() {
               if (!l.menu) {
                 return (
                   <a key={l.href} href={`${base}${l.href}`} aria-current={isActive ? 'true' : undefined}>
-                    {l.label}
+                    {t.nav[l.labelKey]}
                   </a>
                 );
               }
@@ -201,7 +210,7 @@ export default function Nav() {
                       setOpen(false);
                     }}
                   >
-                    {l.label}
+                    {t.nav[l.labelKey]}
                     <Caret />
                   </button>
                   {expanded && (
@@ -221,18 +230,40 @@ export default function Nav() {
           </nav>
 
           <div className="nav-cta">
+            {SHOW_LANGUAGE_SWITCHER ? (
+              // Switching keeps the visitor on the same route; the cookie only
+              // remembers the preference for a later visit to an unprefixed URL.
+              <div className="lang-switch" role="group" aria-label={t.nav.languageLabel}>
+                {LOCALES.map((code) => (
+                  <Link
+                    key={code}
+                    href={localeHref(code, route)}
+                    className={`lang-opt${code === locale ? ' is-active' : ''}`}
+                    hrefLang={code}
+                    aria-current={code === locale ? 'true' : undefined}
+                    onClick={() => {
+                      document.cookie = `uribcare_locale=${code}; path=/; max-age=31536000; samesite=lax`;
+                      close();
+                    }}
+                  >
+                    {code.toUpperCase()}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+
             <a href={`${base}#contact`} className="btn btn-quiet nav-hide-md">
-              Book a demo
+              {t.nav.bookDemo}
             </a>
-            <Link href="/register" className="btn btn-ghost nav-hide-sm">
-              Registration
+            <Link href={path('/register')} className="btn btn-ghost nav-hide-sm">
+              {t.nav.registration}
             </Link>
             <a href={`${base}#contact`} className="btn btn-primary">
-              Start free trial
+              {t.nav.startTrial}
             </a>
 
             {/* last control on the right, after the CTAs */}
-            <button className="icon-btn theme-toggle" id="themeBtn" aria-label="Toggle light and dark theme" onClick={toggleTheme}>
+            <button className="icon-btn theme-toggle" id="themeBtn" aria-label={t.nav.themeToggle} onClick={toggleTheme}>
               <svg className="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="4.2" />
                 <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" />
@@ -244,7 +275,7 @@ export default function Nav() {
 
             <button
               className="icon-btn nav-burger"
-              aria-label={open ? 'Close menu' : 'Open menu'}
+              aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
               aria-expanded={open}
               aria-controls="nav-drawer"
               onClick={() => {
@@ -263,17 +294,17 @@ export default function Nav() {
       {open && <div className="nav-scrim" onClick={close} aria-hidden="true" />}
 
       <div className={`nav-drawer${open ? ' open' : ''}`} id="nav-drawer" hidden={!open}>
-        <nav aria-label="Mobile">
+        <nav aria-label={t.nav.mobileLabel}>
           {LINKS.map((l) =>
             l.route ? (
               <Link
                 key={l.href}
                 className="dl"
-                href={l.href}
-                aria-current={pathname === l.href ? 'true' : undefined}
+                href={path(l.href)}
+                aria-current={route === l.href ? 'true' : undefined}
                 onClick={close}
               >
-                {l.label}
+                {t.nav[l.labelKey]}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M9 6l6 6-6 6" />
                 </svg>
@@ -282,7 +313,7 @@ export default function Nav() {
               // the section link, followed by its individual detail pages
               <div className="drawer-group" key={l.href}>
                 <a className="dl" href={`${base}${l.href}`} onClick={close}>
-                  {l.label}
+                  {t.nav[l.labelKey]}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M9 6l6 6-6 6" />
                   </svg>
@@ -291,7 +322,7 @@ export default function Nav() {
               </div>
             ) : (
               <a key={l.href} className="dl" href={`${base}${l.href}`} onClick={close}>
-                {l.label}
+                {t.nav[l.labelKey]}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M9 6l6 6-6 6" />
                 </svg>
@@ -300,14 +331,14 @@ export default function Nav() {
           )}
         </nav>
         <div className="drawer-actions">
-          <Link href="/register" className="btn btn-ghost" onClick={close}>
-            Registration
+          <Link href={path('/register')} className="btn btn-ghost" onClick={close}>
+            {t.nav.registration}
           </Link>
           <a href={`${base}#contact`} className="btn btn-ghost" onClick={close}>
-            Book a demo
+            {t.nav.bookDemo}
           </a>
           <a href={`${base}#contact`} className="btn btn-primary" onClick={close}>
-            Start free trial
+            {t.nav.startTrial}
           </a>
         </div>
       </div>

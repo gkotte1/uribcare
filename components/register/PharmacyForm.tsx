@@ -1,7 +1,10 @@
 'use client';
 
 import { ChoiceGroup, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField } from './Fields';
-import { PHARMACY_SERVICES, US_STATES, YES_NO } from './options';
+import { usePathname } from 'next/navigation';
+import { getDictionary } from '@/content/dictionary';
+import { localeFromPath } from '@/lib/i18n';
+import { optionsFor } from './optionsFor';
 import { useRegForm } from './useRegForm';
 import { email, futureDate, onlyIf, phone, required, requiredChoice, website, zip } from './validate';
 
@@ -29,103 +32,107 @@ const INITIAL = {
 };
 
 export default function PharmacyForm() {
+  const locale = localeFromPath(usePathname() || '/');
+  const d = getDictionary(locale).register;
+  const t = d.forms.pharmacy;
+  const o = optionsFor(locale);
   const form = useRegForm('pharmacy', INITIAL, (v) => ({
-    pharmacyName: [required('Please enter the pharmacy name.')],
-    legalName: [required('Please enter the legal business name.')],
-    email: [required('Please enter a business email.'), email],
-    phone: [required('Please enter a phone number.'), phone],
-    address: [required('Please enter the address.')],
-    city: [required('Please enter the city.')],
-    state: [requiredChoice('Please choose a state.')],
-    zip: [required('Please enter the ZIP code.'), zip],
+    pharmacyName: [required(d.validation.required)],
+    legalName: [required(d.validation.required)],
+    email: [required(d.validation.required), email],
+    phone: [required(d.validation.required), phone],
+    address: [required(d.validation.required)],
+    city: [required(d.validation.required)],
+    state: [requiredChoice(d.validation.choice)],
+    zip: [required(d.validation.required), zip],
     website: [website],
-    licenseNumber: [required('Please enter the pharmacy license number.')],
-    issuingState: [requiredChoice('Please choose the issuing state.')],
-    licenseExpiration: [required('Please enter the license expiration date.'), futureDate],
-    pharmacistFirstName: [required("Please enter the pharmacist's first name.")],
-    pharmacistLastName: [required("Please enter the pharmacist's last name.")],
-    pharmacistLicenseNumber: [required('Please enter the pharmacist license number.')],
-    pharmacistState: [requiredChoice('Please choose a state.')],
-    servicesOther: [onlyIf(v.services.includes('Other'), required('Please specify the other services offered.'))],
+    licenseNumber: [required(d.validation.required)],
+    issuingState: [requiredChoice(d.validation.choice)],
+    licenseExpiration: [required(d.validation.required), futureDate],
+    pharmacistFirstName: [required(d.validation.required)],
+    pharmacistLastName: [required(d.validation.required)],
+    pharmacistLicenseNumber: [required(d.validation.required)],
+    pharmacistState: [requiredChoice(d.validation.choice)],
+    servicesOther: [onlyIf(v.services.includes('Other'), required(d.validation.required))],
   }));
 
   const { values, status } = form;
 
   if (status === 'submitted' && form.submission) {
     return (
-      <FormCard title="Pharmacy Registration Form">
+      <FormCard title={t.title}>
         <SuccessPanel
-          heading="Registration received"
+          heading={d.common.received}
           submission={form.submission}
-          note="Our team will verify the pharmacy licence details before the listing goes live."
+          note={t.successNote}
         />
       </FormCard>
     );
   }
 
   return (
-    <FormCard title="Pharmacy Registration Form" intro="Register your pharmacy to fulfil prescriptions across the URiBCARE network.">
+    <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
-        <FormSection legend="Business information">
+        <FormSection legend={d.sections.business}>
           <Grid>
-            <TextField form={form} name="pharmacyName" label="Pharmacy Name" required />
-            <TextField form={form} name="legalName" label="Legal Business Name" required />
-            <TextField form={form} name="email" label="Business Email" type="email" required autoComplete="email" />
-            <TextField form={form} name="phone" label="Phone Number" type="tel" required autoComplete="tel" />
-            <TextField form={form} name="address" label="Address" required autoComplete="street-address" span />
+            <TextField form={form} name="pharmacyName" label={t.pharmacyName} required />
+            <TextField form={form} name="legalName" label={t.legalName} required />
+            <TextField form={form} name="email" label={d.fields.businessEmail} type="email" required autoComplete="email" />
+            <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
+            <TextField form={form} name="address" label={d.fields.address} required autoComplete="street-address" span />
           </Grid>
           <Grid cols={3}>
-            <TextField form={form} name="city" label="City" required autoComplete="address-level2" />
-            <SelectField form={form} name="state" label="State" options={US_STATES} required placeholder="Select state" />
-            <TextField form={form} name="zip" label="ZIP Code" required inputMode="numeric" autoComplete="postal-code" />
+            <TextField form={form} name="city" label={d.fields.city} required autoComplete="address-level2" />
+            <SelectField form={form} name="state" label={d.fields.state} options={o.states} required placeholder={t.selectState} />
+            <TextField form={form} name="zip" label={d.fields.zip} required inputMode="numeric" autoComplete="postal-code" />
           </Grid>
           <Grid>
-            <TextField form={form} name="website" label="Website" type="url" placeholder="pharmacy.com" />
-            <TextField form={form} name="hours" label="Business Hours" placeholder="Mon–Fri 9am–7pm, Sat 9am–2pm" />
+            <TextField form={form} name="website" label={d.fields.website} type="url" placeholder={t.websitePlaceholder} />
+            <TextField form={form} name="hours" label={t.businessHours} placeholder={t.hoursPlaceholder} />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Pharmacy licence">
+        <FormSection legend={d.sections.pharmacyLicence}>
           <Grid cols={3}>
-            <TextField form={form} name="licenseNumber" label="Pharmacy License Number" required />
-            <SelectField form={form} name="issuingState" label="Issuing State" options={US_STATES} required placeholder="Select state" />
-            <TextField form={form} name="licenseExpiration" label="License Expiration Date" type="date" required />
+            <TextField form={form} name="licenseNumber" label={t.pharmacyLicense} required />
+            <SelectField form={form} name="issuingState" label={d.fields.issuingState} options={o.states} required placeholder={t.selectState} />
+            <TextField form={form} name="licenseExpiration" label={d.fields.licenseExpiration} type="date" required />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Responsible pharmacist">
+        <FormSection legend={d.sections.responsiblePharmacist}>
           <Grid>
-            <TextField form={form} name="pharmacistFirstName" label="First Name" required />
-            <TextField form={form} name="pharmacistLastName" label="Last Name" required />
-            <TextField form={form} name="pharmacistLicenseNumber" label="Pharmacist License Number" required />
-            <SelectField form={form} name="pharmacistState" label="State" options={US_STATES} required placeholder="Select state" />
+            <TextField form={form} name="pharmacistFirstName" label={d.fields.firstName} required />
+            <TextField form={form} name="pharmacistLastName" label={d.fields.lastName} required />
+            <TextField form={form} name="pharmacistLicenseNumber" label={t.pharmacistLicense} required />
+            <SelectField form={form} name="pharmacistState" label={d.fields.state} options={o.states} required placeholder={t.selectState} />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Services">
+        <FormSection legend={d.sections.services}>
           <ChoiceGroup
             form={form}
             name="services"
-            label="Services Offered"
-            options={PHARMACY_SERVICES}
-            hint="Select all that apply."
+            label={t.servicesOffered}
+            options={o.pharmacyServices}
+            hint={d.common.selectAllThatApply}
           />
           {values.services.includes('Other') ? (
             <Grid>
-              <TextField form={form} name="servicesOther" label="Please specify" required span />
+              <TextField form={form} name="servicesOther" label={d.common.pleaseSpecify} required span />
             </Grid>
           ) : null}
           <ChoiceGroup
             form={form}
             name="discountInterest"
-            label="Interested in offering discounts to URiBCARE patients?"
-            options={YES_NO}
+            label={t.discountInterest}
+            options={o.yesNo}
             mode="single"
-            hint="Recorded as a preference only — no discount programme is set up at registration."
+            hint={t.discountHint}
           />
         </FormSection>
 
-        <SubmitRow label="Submit Pharmacy Registration" submitting={status === 'submitting'} />
+        <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>
   );

@@ -1,10 +1,15 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { getDictionary } from '@/content/dictionary';
+import { localeFromPath } from '@/lib/i18n';
 
 const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function LeadForm() {
+  const locale = localeFromPath(usePathname() || '/');
+  const t = getDictionary(locale).lead;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -45,12 +50,12 @@ export default function LeadForm() {
 
     const body =
       `New free-trial request from the Uribcare site:\n\n` +
-      `Name: ${n}\nEmail: ${em}\nPhone: ${ph || '—'}\nI am a: ${r}\n\n` +
-      `What they need:\n${msg || '—'}\n`;
+      `Name: ${n}\nEmail: ${em}\nPhone: ${ph || 'Not provided'}\nI am a: ${r}\n\n` +
+      `What they need:\n${msg || 'Not provided'}\n`;
     const mailto =
       'mailto:contact@uribcare.com' +
       '?subject=' +
-      encodeURIComponent('Free trial request — ' + n) +
+      encodeURIComponent('Free trial request: ' + n) +
       '&body=' +
       encodeURIComponent(body);
 
@@ -64,18 +69,18 @@ export default function LeadForm() {
   return (
     <div className="contact-form">
       <form id="leadForm" noValidate onSubmit={handleSubmit} style={submitted ? { display: 'none' } : undefined}>
-        <h3>Request access</h3>
-        <p className="sub">We&apos;ll reply personally — usually within a day or two.</p>
+        <h3>{t.heading}</h3>
+        <p className="sub">{t.sub}</p>
         <div className={`field${errName ? ' err' : ''}`} id="f-name">
           <label htmlFor="in-name">
-            Full name <span className="req">*</span>
+            {t.fullName} <span className="req">*</span>
           </label>
           <input
             id="in-name"
             name="name"
             type="text"
             autoComplete="name"
-            placeholder="Your name"
+            placeholder={t.namePlaceholder}
             value={name}
             aria-invalid={errName || undefined}
             aria-describedby={errName ? 'e-name' : undefined}
@@ -84,19 +89,19 @@ export default function LeadForm() {
               setErrName(false);
             }}
           />
-          <span className="msg" id="e-name">Please enter your name.</span>
+          <span className="msg" id="e-name">{t.nameError}</span>
         </div>
         <div className="row2">
           <div className={`field${errEmail ? ' err' : ''}`} id="f-email">
             <label htmlFor="in-email">
-              Email <span className="req">*</span>
+              {t.email} <span className="req">*</span>
             </label>
             <input
               id="in-email"
               name="email"
               type="email"
               autoComplete="email"
-              placeholder="you@email.com"
+              placeholder={t.emailPlaceholder}
               value={email}
               aria-invalid={errEmail || undefined}
               aria-describedby={errEmail ? 'e-email' : undefined}
@@ -105,16 +110,16 @@ export default function LeadForm() {
                 setErrEmail(false);
               }}
             />
-            <span className="msg" id="e-email">Please enter a valid email.</span>
+            <span className="msg" id="e-email">{t.emailError}</span>
           </div>
           <div className="field" id="f-phone">
-            <label htmlFor="in-phone">Phone</label>
+            <label htmlFor="in-phone">{t.phone}</label>
             <input
               id="in-phone"
               name="phone"
               type="tel"
               autoComplete="tel"
-              placeholder="Optional"
+              placeholder={t.optional}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
@@ -123,7 +128,7 @@ export default function LeadForm() {
         </div>
         <div className={`field${errRole ? ' err' : ''}`} id="f-role">
           <label htmlFor="in-role">
-            I am a… <span className="req">*</span>
+            {t.role} <span className="req">*</span>
           </label>
           <select
             id="in-role"
@@ -137,32 +142,29 @@ export default function LeadForm() {
             }}
           >
             <option value="" disabled>
-              Select one
+              {t.selectOne}
             </option>
-            <option>Patient or family member</option>
-            <option>Parent seeking autism care</option>
-            <option>Doctor or specialist</option>
-            <option>Therapist or counselor</option>
-            <option>Clinic, pharmacy or lab</option>
-            <option>Other</option>
+            {t.roles.map((r) => (
+              <option key={r}>{r}</option>
+            ))}
           </select>
-          <span className="msg" id="e-role">Please choose an option.</span>
+          <span className="msg" id="e-role">{t.roleError}</span>
         </div>
         <div className="field" id="f-msg">
-          <label htmlFor="in-message">What do you need help with?</label>
+          <label htmlFor="in-message">{t.needHelp}</label>
           <textarea
             id="in-message"
             name="message"
-            placeholder="Optional — tell us about the care you're looking for."
+            placeholder={t.needPlaceholder}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
           <span className="msg"></span>
         </div>
         <button type="submit" className="btn btn-primary btn-lg">
-          Request my free trial
+          {t.submit}
         </button>
-        <p className="form-note">By submitting, you agree to be contacted by Uribcare about your request.</p>
+        <p className="form-note">{t.note}</p>
       </form>
 
       <div className={`form-success${submitted ? ' show' : ''}`} id="leadSuccess" role="status" aria-live="polite">
@@ -171,7 +173,7 @@ export default function LeadForm() {
             <path d="M5 12l4 4L19 6" />
           </svg>
         </div>
-        <h3>Thank you — we&apos;ve got it.</h3>
+        <h3>{t.thanks}</h3>
         <p>
           Your email app should open with your request ready to send. If it didn&apos;t, email us directly at{' '}
           <a href="mailto:contact@uribcare.com" style={{ color: 'var(--pine-deep)', textDecoration: 'underline' }}>

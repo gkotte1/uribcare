@@ -16,6 +16,9 @@ import {
   Stethoscope,
 } from '@/components/Icons';
 import type { Card, CardIcon, Detail } from '@/content/types';
+import { getDictionary } from '@/content/dictionary';
+import { DEFAULT_LOCALE, localeHref } from '@/lib/i18n';
+import type { Locale } from '@/lib/i18n';
 
 /** Showcase card icons, drawn from the shared icon set. */
 const CARD_ICONS: Record<CardIcon, (p: { size?: number }) => JSX.Element> = {
@@ -47,7 +50,7 @@ export type Sibling = { name: string; href: string; icon: Detail['icon'] };
  *
  * `featuredJourney` makes the numbered journey the centrepiece: it moves
  * directly under the overview and adopts the home page "patient journey"
- * layout — `.journey-layout` with a sticky `.journey-head` beside the steps.
+ * layout: `.journey-layout` with a sticky `.journey-head` beside the steps.
  * Pages that leave it off keep the heading-above-steps arrangement.
  */
 export default function DetailPage({
@@ -56,13 +59,17 @@ export default function DetailPage({
   siblingsLabel,
   parent,
   featuredJourney = false,
+  locale = DEFAULT_LOCALE,
 }: {
   detail: Detail;
   siblings: Sibling[];
   siblingsLabel: string;
   parent?: { label: string; href: string };
   featuredJourney?: boolean;
+  locale?: Locale;
 }) {
+  const t = getDictionary(locale).detail;
+  const path = (to: string) => localeHref(locale, to);
   const { overview, provides, audience, benefits, support, process, cta, image } = detail;
 
   // Elevated card showcase: one featured card, the rest at normal weight, each
@@ -82,13 +89,13 @@ export default function DetailPage({
         <p>{card.text}</p>
         {card.href ? (
           <span className="arrow-link care-more">
-            Learn more <Arrow size={16} className="ar" />
+            {t.learnMore} <Arrow size={16} className="ar" />
           </span>
         ) : null}
       </>
     );
     return card.href ? (
-      <Link className={className} href={card.href} key={card.title}>
+      <Link className={className} href={path(card.href)} key={card.title}>
         {inner}
       </Link>
     ) : (
@@ -137,11 +144,11 @@ export default function DetailPage({
         <section className="band detail-hero">
           <div className="wrap">
             <nav className="detail-crumbs" aria-label="Breadcrumb">
-              <Link href="/">Home</Link>
+              <Link href={path('/')}>{t.home}</Link>
               <span aria-hidden="true">/</span>
               {parent ? (
                 <>
-                  <Link href={parent.href}>{parent.label}</Link>
+                  <Link href={path(parent.href)}>{parent.label}</Link>
                   <span aria-hidden="true">/</span>
                 </>
               ) : null}
@@ -163,10 +170,10 @@ export default function DetailPage({
             </div>
 
             <div className="hero-cta detail-cta reveal">
-              <a href={cta.primary.href} className="btn btn-primary btn-lg">
+              <a href={path(cta.primary.href)} className="btn btn-primary btn-lg">
                 {cta.primary.label}
               </a>
-              <a href={cta.secondary.href} className="btn btn-ghost btn-lg">
+              <a href={path(cta.secondary.href)} className="btn btn-ghost btn-lg">
                 {cta.secondary.label}
               </a>
             </div>
@@ -179,7 +186,7 @@ export default function DetailPage({
             {image ? (
               <div className="split">
                 <div className="reveal">
-                  <span className="eyebrow">Overview</span>
+                  <span className="eyebrow">{t.overview}</span>
                   <h2 className="detail-h2">{overview.heading}</h2>
                   {overview.paragraphs.map((p, i) => (
                     <p className="lead detail-para" key={i}>
@@ -198,7 +205,7 @@ export default function DetailPage({
             ) : (
               <div className="split">
                 <div className="reveal">
-                  <span className="eyebrow">Overview</span>
+                  <span className="eyebrow">{t.overview}</span>
                   <h2 className="detail-h2">{overview.heading}</h2>
                   {overview.paragraphs.map((p, i) => (
                     <p className="lead detail-para" key={i}>
@@ -335,7 +342,7 @@ export default function DetailPage({
               <p className="strip-head">{siblingsLabel}</p>
               <div className="provider-row">
                 {siblings.map((sibling) => (
-                  <Link className="pchip pchip-link" href={sibling.href} key={sibling.href}>
+                  <Link className="pchip pchip-link" href={path(sibling.href)} key={sibling.href}>
                     <CategoryIcon name={sibling.icon} size={17} /> {sibling.name}
                   </Link>
                 ))}
@@ -353,10 +360,10 @@ export default function DetailPage({
               <h2>{cta.heading}</h2>
               <p>{cta.text}</p>
               <div className="hero-cta">
-                <a href={cta.primary.href} className="btn btn-warm btn-lg">
+                <a href={path(cta.primary.href)} className="btn btn-warm btn-lg">
                   {cta.primary.label}
                 </a>
-                <a href={cta.secondary.href} className="btn btn-ghost btn-lg">
+                <a href={path(cta.secondary.href)} className="btn btn-ghost btn-lg">
                   {cta.secondary.label}
                 </a>
               </div>
@@ -366,7 +373,7 @@ export default function DetailPage({
         </section>
       </main>
 
-      <SiteFooter base="/" />
+      <SiteFooter base="/" locale={locale} />
       <Reveal />
     </>
   );

@@ -1,7 +1,10 @@
 'use client';
 
 import { FileField, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
-import { DOCTOR_SPECIALTIES, DOCTOR_TITLES, GENDERS, US_STATES, YES_NO } from './options';
+import { usePathname } from 'next/navigation';
+import { getDictionary } from '@/content/dictionary';
+import { localeFromPath } from '@/lib/i18n';
+import { optionsFor } from './optionsFor';
 import { useRegForm } from './useRegForm';
 import { email, futureDate, npi, onlyIf, phone, required, requiredChoice, upload, zip } from './validate';
 
@@ -40,20 +43,24 @@ const INITIAL = {
 };
 
 export default function DoctorForm() {
+  const locale = localeFromPath(usePathname() || '/');
+  const d = getDictionary(locale).register;
+  const t = d.forms.doctor;
+  const o = optionsFor(locale);
   const form = useRegForm('doctor', INITIAL, (v) => ({
-    firstName: [required('Please enter your first name.')],
-    lastName: [required('Please enter your last name.')],
-    email: [required('Please enter your professional email.'), email],
-    phone: [required('Please enter a phone number.'), phone],
-    title: [requiredChoice('Please choose your professional title.')],
-    titleOther: [onlyIf(v.title === 'Other', required('Please specify your professional title.'))],
-    specialty: [requiredChoice('Please choose your specialty.')],
-    specialtyOther: [onlyIf(v.specialty === 'Other', required('Please specify your specialty.'))],
+    firstName: [required(d.validation.required)],
+    lastName: [required(d.validation.required)],
+    email: [required(d.validation.required), email],
+    phone: [required(d.validation.required), phone],
+    title: [requiredChoice(d.validation.choice)],
+    titleOther: [onlyIf(v.title === 'Other', required(d.validation.required))],
+    specialty: [requiredChoice(d.validation.choice)],
+    specialtyOther: [onlyIf(v.specialty === 'Other', required(d.validation.required))],
     zip: [zip],
-    licenseNumber: [required('Please enter your medical license number.')],
-    licensingState: [requiredChoice('Please choose the licensing state.')],
-    licenseExpiration: [required('Please enter the license expiration date.'), futureDate],
-    npi: [required('Please enter your NPI number.'), npi],
+    licenseNumber: [required(d.validation.required)],
+    licensingState: [requiredChoice(d.validation.choice)],
+    licenseExpiration: [required(d.validation.required), futureDate],
+    npi: [required(d.validation.required), npi],
     uploadLicense: [upload],
     uploadBoardCert: [upload],
     uploadNpi: [upload],
@@ -65,98 +72,98 @@ export default function DoctorForm() {
 
   if (status === 'submitted' && form.submission) {
     return (
-      <FormCard title="Doctor Registration Form">
+      <FormCard title={t.title}>
         <SuccessPanel
-          heading="Registration received"
+          heading={d.common.received}
           submission={form.submission}
-          note="Your credentials will be reviewed by our team before your profile goes live. Nothing is marked verified until that review is complete."
+          note={t.successNote}
         />
       </FormCard>
     );
   }
 
   return (
-    <FormCard title="Doctor Registration Form" intro="Credentials are reviewed manually — profiles stay unverified until that review completes.">
+    <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
-        <FormSection legend="Professional information">
+        <FormSection legend={d.sections.professional}>
           <Grid>
-            <TextField form={form} name="firstName" label="First Name" required autoComplete="given-name" />
-            <TextField form={form} name="lastName" label="Last Name" required autoComplete="family-name" />
-            <TextField form={form} name="email" label="Professional Email" type="email" required autoComplete="email" />
-            <TextField form={form} name="phone" label="Phone Number" type="tel" required autoComplete="tel" />
+            <TextField form={form} name="firstName" label={d.fields.firstName} required autoComplete="given-name" />
+            <TextField form={form} name="lastName" label={d.fields.lastName} required autoComplete="family-name" />
+            <TextField form={form} name="email" label={d.fields.professionalEmail} type="email" required autoComplete="email" />
+            <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
             <SelectField
               form={form}
               name="title"
-              label="Professional Title"
-              options={DOCTOR_TITLES}
+              label={d.fields.title}
+              options={o.doctorTitles}
               required
-              placeholder="Select title"
+              placeholder={t.selectTitle}
               onChangeValue={(value) => form.patch({ title: value, titleOther: value === 'Other' ? values.titleOther : '' })}
             />
-            {values.title === 'Other' ? <TextField form={form} name="titleOther" label="Please specify" required /> : null}
+            {values.title === 'Other' ? <TextField form={form} name="titleOther" label={d.common.pleaseSpecify} required /> : null}
             <SelectField
               form={form}
               name="specialty"
-              label="Specialty"
-              options={DOCTOR_SPECIALTIES}
+              label={d.fields.specialty}
+              options={o.doctorSpecialties}
               required
-              placeholder="Select specialty"
+              placeholder={t.selectSpecialty}
               onChangeValue={(value) =>
                 form.patch({ specialty: value, specialtyOther: value === 'Other' ? values.specialtyOther : '' })
               }
             />
             {values.specialty === 'Other' ? (
-              <TextField form={form} name="specialtyOther" label="Please specify" required />
+              <TextField form={form} name="specialtyOther" label={d.common.pleaseSpecify} required />
             ) : null}
-            <TextField form={form} name="subSpecialty" label="Sub-specialty" />
-            <TextField form={form} name="experience" label="Years of Experience" type="number" inputMode="numeric" min="0" max="70" />
-            <SelectField form={form} name="gender" label="Gender" options={GENDERS} />
+            <TextField form={form} name="subSpecialty" label={d.fields.subSpecialty} />
+            <TextField form={form} name="experience" label={d.fields.experience} type="number" inputMode="numeric" min="0" max="70" />
+            <SelectField form={form} name="gender" label={d.fields.gender} options={o.genders} />
             <TextareaField
               form={form}
               name="bio"
-              label="Professional Bio"
-              placeholder="A short summary of your practice and approach."
+              label={d.fields.bio}
+              placeholder={t.bioPlaceholder}
             />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Practice address">
+        <FormSection legend={d.sections.practiceAddress}>
           <Grid>
-            <TextField form={form} name="address" label="Address" autoComplete="street-address" span />
+            <TextField form={form} name="address" label={d.fields.address} autoComplete="street-address" span />
           </Grid>
           <Grid cols={3}>
-            <TextField form={form} name="city" label="City" autoComplete="address-level2" />
-            <SelectField form={form} name="state" label="State" options={US_STATES} />
-            <TextField form={form} name="zip" label="ZIP Code" inputMode="numeric" autoComplete="postal-code" />
+            <TextField form={form} name="city" label={d.fields.city} autoComplete="address-level2" />
+            <SelectField form={form} name="state" label={d.fields.state} options={o.states} />
+            <TextField form={form} name="zip" label={d.fields.zip} inputMode="numeric" autoComplete="postal-code" />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Credentials">
+        <FormSection legend={d.sections.credentials}>
           <Grid>
-            <TextField form={form} name="licenseNumber" label="Medical License Number" required />
-            <SelectField form={form} name="licensingState" label="Licensing State" options={US_STATES} required placeholder="Select state" />
-            <TextField form={form} name="licenseExpiration" label="License Expiration Date" type="date" required />
-            <TextField form={form} name="npi" label="NPI Number" required inputMode="numeric" hint="10 digits" />
-            <SelectField form={form} name="boardCertified" label="Board Certified?" options={YES_NO} />
-            <TextField form={form} name="dea" label="DEA Registration" hint="If applicable" />
-            <TextField form={form} name="medicalSchool" label="Medical School" />
-            <TextField form={form} name="degree" label="Degree" />
-            <TextField form={form} name="residency" label="Residency" />
-            <TextField form={form} name="fellowship" label="Fellowship" />
+            <TextField form={form} name="licenseNumber" label={t.medicalLicense} required />
+            <SelectField form={form} name="licensingState" label={d.fields.licensingState} options={o.states} required placeholder={t.selectState} />
+            <TextField form={form} name="licenseExpiration" label={d.fields.licenseExpiration} type="date" required />
+            <TextField form={form} name="npi" label={d.fields.npi} required inputMode="numeric" hint={t.npiHint} />
+            <SelectField form={form} name="boardCertified" label={t.boardCertified} options={o.yesNo} />
+            <TextField form={form} name="dea" label={t.dea} hint={t.deaHint} />
+            <TextField form={form} name="medicalSchool" label={t.medicalSchool} />
+            <TextField form={form} name="degree" label={t.degree} />
+            <TextField form={form} name="residency" label={t.residency} />
+            <TextField form={form} name="fellowship" label={t.fellowship} />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Credential uploads">
+        <FormSection legend={d.sections.uploads}>
           <Grid>
-            <FileField form={form} name="uploadLicense" label="Upload Medical License" />
-            <FileField form={form} name="uploadBoardCert" label="Upload Board Certification" />
-            <FileField form={form} name="uploadNpi" label="Upload NPI Documentation" />
-            <FileField form={form} name="uploadGovId" label="Upload Government ID" />
-            <FileField form={form} name="uploadOther" label="Upload Other Credentials" />
+            <FileField form={form} name="uploadLicense" label={t.uploadLicense} />
+            <FileField form={form} name="uploadBoardCert" label={t.uploadBoardCert} />
+            <FileField form={form} name="uploadNpi" label={t.uploadNpi} />
+            <FileField form={form} name="uploadGovId" label={t.uploadGovId} />
+            <FileField form={form} name="uploadOther" label={t.uploadOther} />
           </Grid>
         </FormSection>
 
-        <SubmitRow label="Submit Doctor Registration" submitting={status === 'submitting'} />
+        <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>
   );

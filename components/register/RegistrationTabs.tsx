@@ -1,6 +1,9 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { getDictionary } from '@/content/dictionary';
+import { localeFromPath } from '@/lib/i18n';
 import CounselorForm from './CounselorForm';
 import DoctorForm from './DoctorForm';
 import LaboratoryForm from './LaboratoryForm';
@@ -8,16 +11,19 @@ import PatientForm from './PatientForm';
 import PharmacyForm from './PharmacyForm';
 import TherapistForm from './TherapistForm';
 
+/** Tab labels come from the dictionary; `id` keys both the label and the panel. */
 const TABS = [
-  { id: 'patient', label: 'Patient Registration', Form: PatientForm },
-  { id: 'doctor', label: 'Doctor Registration', Form: DoctorForm },
-  { id: 'therapist', label: 'Therapist Registration', Form: TherapistForm },
-  { id: 'counselor', label: 'Counselor Registration', Form: CounselorForm },
-  { id: 'pharmacy', label: 'Pharmacy Registration', Form: PharmacyForm },
-  { id: 'laboratory', label: 'Laboratory Registration', Form: LaboratoryForm },
-];
+  { id: 'patient', Form: PatientForm },
+  { id: 'doctor', Form: DoctorForm },
+  { id: 'therapist', Form: TherapistForm },
+  { id: 'counselor', Form: CounselorForm },
+  { id: 'pharmacy', Form: PharmacyForm },
+  { id: 'laboratory', Form: LaboratoryForm },
+] as const;
 
 export default function RegistrationTabs() {
+  const locale = localeFromPath(usePathname() || '/');
+  const t = getDictionary(locale).register;
   const [active, setActive] = useState(0);
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +53,7 @@ export default function RegistrationTabs() {
         <div
           className="reg-tabs-track"
           role="tablist"
-          aria-label="Registration type"
+          aria-label={t.tablistLabel}
           ref={tabsRef}
           onKeyDown={onKeyDown}
         >
@@ -63,7 +69,7 @@ export default function RegistrationTabs() {
               tabIndex={index === active ? 0 : -1}
               onClick={() => setActive(index)}
             >
-              {tab.label}
+              {t.tabs[tab.id]}
             </button>
           ))}
         </div>

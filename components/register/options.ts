@@ -111,12 +111,12 @@ export const isTherapyType = (v: string): v is TherapyType =>
   (THERAPY_TYPES as readonly string[]).includes(v);
 
 export const THERAPIST_LICENSE_TYPES = [
-  'SLP — Speech-Language Pathologist',
-  'OT — Occupational Therapist',
-  'OTA — Occupational Therapy Assistant',
-  'PT — Physical Therapist',
-  'PTA — Physical Therapist Assistant',
-  'BCBA — Board Certified Behavior Analyst',
+  'SLP (Speech-Language Pathologist)',
+  'OT (Occupational Therapist)',
+  'OTA (Occupational Therapy Assistant)',
+  'PT (Physical Therapist)',
+  'PTA (Physical Therapist Assistant)',
+  'BCBA (Board Certified Behavior Analyst)',
   'Other',
 ];
 

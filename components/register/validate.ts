@@ -78,7 +78,7 @@ export const futureDate: Rule = (v) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return d.getTime() < today.getTime()
-    ? 'This date has already passed — please provide a current expiration date.'
+    ? 'This date has already passed. Please provide a current expiration date.'
     : null;
 };
 
@@ -111,7 +111,7 @@ export const upload: Rule = (v) => {
   return null;
 };
 
-/** Runs `rule` only when `when` is true — used for conditionally shown fields. */
+/** Runs `rule` only when `when` is true, for conditionally shown fields. */
 export const onlyIf =
   (when: boolean, rule: Rule): Rule =>
   (v, values) =>

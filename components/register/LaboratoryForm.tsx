@@ -1,7 +1,10 @@
 'use client';
 
 import { ChoiceGroup, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField } from './Fields';
-import { CLIA_CERTIFICATE_TYPES, LAB_AVAILABILITY, LAB_SERVICES, US_STATES } from './options';
+import { usePathname } from 'next/navigation';
+import { getDictionary } from '@/content/dictionary';
+import { localeFromPath } from '@/lib/i18n';
+import { optionsFor } from './optionsFor';
 import { useRegForm } from './useRegForm';
 import type { RowValue } from './validate';
 import { email, futureDate, onlyIf, phone, required, requiredChoice, website, zip } from './validate';
@@ -31,19 +34,23 @@ const INITIAL = {
 };
 
 export default function LaboratoryForm() {
+  const locale = localeFromPath(usePathname() || '/');
+  const d = getDictionary(locale).register;
+  const t = d.forms.laboratory;
+  const o = optionsFor(locale);
   const form = useRegForm('laboratory', INITIAL, (v) => ({
-    labName: [required('Please enter the laboratory name.')],
-    legalName: [required('Please enter the legal business name.')],
-    email: [required('Please enter a business email.'), email],
-    phone: [required('Please enter a phone number.'), phone],
-    address: [required('Please enter the address.')],
-    city: [required('Please enter the city.')],
-    state: [requiredChoice('Please choose a state.')],
-    zip: [required('Please enter the ZIP code.'), zip],
+    labName: [required(d.validation.required)],
+    legalName: [required(d.validation.required)],
+    email: [required(d.validation.required), email],
+    phone: [required(d.validation.required), phone],
+    address: [required(d.validation.required)],
+    city: [required(d.validation.required)],
+    state: [requiredChoice(d.validation.choice)],
+    zip: [required(d.validation.required), zip],
     website: [website],
-    clia: [required('Please enter the CLIA number.')],
+    clia: [required(d.validation.required)],
     certificateExpiration: [futureDate],
-    servicesOther: [onlyIf(v.services.includes('Other'), required('Please specify the other services offered.'))],
+    servicesOther: [onlyIf(v.services.includes('Other'), required(d.validation.required))],
   }));
 
   const { values, status } = form;
@@ -55,77 +62,77 @@ export default function LaboratoryForm() {
 
   if (status === 'submitted' && form.submission) {
     return (
-      <FormCard title="Laboratory Registration Form">
+      <FormCard title={t.title}>
         <SuccessPanel
-          heading="Registration received"
+          heading={d.common.received}
           submission={form.submission}
-          note="Our team will verify the CLIA and accreditation details before the laboratory goes live."
+          note={t.successNote}
         />
       </FormCard>
     );
   }
 
   return (
-    <FormCard title="Laboratory Registration Form" intro="Register your laboratory to receive test orders from across the network.">
+    <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
-        <FormSection legend="Business information">
+        <FormSection legend={d.sections.business}>
           <Grid>
-            <TextField form={form} name="labName" label="Laboratory Name" required />
-            <TextField form={form} name="legalName" label="Legal Business Name" required />
-            <TextField form={form} name="email" label="Business Email" type="email" required autoComplete="email" />
-            <TextField form={form} name="phone" label="Phone Number" type="tel" required autoComplete="tel" />
-            <TextField form={form} name="address" label="Address" required autoComplete="street-address" span />
+            <TextField form={form} name="labName" label={t.labName} required />
+            <TextField form={form} name="legalName" label={t.legalName} required />
+            <TextField form={form} name="email" label={d.fields.businessEmail} type="email" required autoComplete="email" />
+            <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
+            <TextField form={form} name="address" label={d.fields.address} required autoComplete="street-address" span />
           </Grid>
           <Grid cols={3}>
-            <TextField form={form} name="city" label="City" required autoComplete="address-level2" />
-            <SelectField form={form} name="state" label="State" options={US_STATES} required placeholder="Select state" />
-            <TextField form={form} name="zip" label="ZIP Code" required inputMode="numeric" autoComplete="postal-code" />
+            <TextField form={form} name="city" label={d.fields.city} required autoComplete="address-level2" />
+            <SelectField form={form} name="state" label={d.fields.state} options={o.states} required placeholder={t.selectState} />
+            <TextField form={form} name="zip" label={d.fields.zip} required inputMode="numeric" autoComplete="postal-code" />
           </Grid>
           <Grid>
-            <TextField form={form} name="website" label="Website" type="url" placeholder="laboratory.com" />
-            <TextField form={form} name="hours" label="Operating Hours" placeholder="Mon–Sat 7am–6pm" />
+            <TextField form={form} name="website" label={d.fields.website} type="url" placeholder={t.websitePlaceholder} />
+            <TextField form={form} name="hours" label={t.operatingHours} placeholder={t.hoursPlaceholder} />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Credentials">
+        <FormSection legend={d.sections.credentials}>
           <Grid>
-            <TextField form={form} name="clia" label="CLIA Number" required hint="10-character CLIA identifier" />
+            <TextField form={form} name="clia" label={t.clia} required hint={t.cliaHint} />
             <SelectField
               form={form}
               name="cliaType"
-              label="CLIA Certificate Type"
-              options={CLIA_CERTIFICATE_TYPES}
-              placeholder="Select certificate type"
+              label={t.cliaType}
+              options={o.cliaTypes}
+              placeholder={t.selectCliaType}
             />
-            <TextField form={form} name="certificateExpiration" label="Certificate Expiration Date" type="date" />
-            <TextField form={form} name="stateLicense" label="State License" hint="Where applicable" />
-            <TextField form={form} name="accreditation" label="Accreditation" hint="Where applicable — e.g. CAP, COLA, Joint Commission" span />
+            <TextField form={form} name="certificateExpiration" label={t.certExpiration} type="date" />
+            <TextField form={form} name="stateLicense" label={t.stateLicense} hint={t.whereApplicable} />
+            <TextField form={form} name="accreditation" label={t.accreditation} hint={t.accreditationHint} span />
           </Grid>
         </FormSection>
 
-        <FormSection legend="Laboratory services">
+        <FormSection legend={d.sections.labServices}>
           <ChoiceGroup
             form={form}
             name="services"
-            label="Laboratory Services"
-            options={LAB_SERVICES}
-            hint="Select all that apply."
+            label={t.labServices}
+            options={o.labServices}
+            hint={d.common.selectAllThatApply}
           />
           {values.services.includes('Other') ? (
             <Grid>
-              <TextField form={form} name="servicesOther" label="Please specify" required span />
+              <TextField form={form} name="servicesOther" label={d.common.pleaseSpecify} required span />
             </Grid>
           ) : null}
           <ChoiceGroup
             form={form}
             name="availability"
-            label="Service Availability"
-            options={LAB_AVAILABILITY}
-            hint="Select all that apply."
+            label={t.availability}
+            options={o.labAvailability}
+            hint={d.common.selectAllThatApply}
           />
         </FormSection>
 
-        <FormSection legend="Additional locations">
+        <FormSection legend={d.sections.additionalLocations}>
           {values.locations.length ? (
             <div className="reg-repeat">
               {values.locations.map((loc, index) => (
@@ -133,7 +140,7 @@ export default function LaboratoryForm() {
                 // of this list, so the position is a stable identity here.
                 <div className="reg-loc" key={`location-${index}`}>
                   <div className="reg-loc-head">
-                    <h4>Location {index + 2}</h4>
+                    <h4>{d.common.location} {index + 2}</h4>
                     <button
                       type="button"
                       className="reg-remove"
@@ -144,12 +151,12 @@ export default function LaboratoryForm() {
                         )
                       }
                     >
-                      Remove
+                      {d.common.remove}
                     </button>
                   </div>
                   <div className="reg-grid">
                     <div className="field span2">
-                      <label htmlFor={`lab-loc-${index}-address`}>Address</label>
+                      <label htmlFor={`lab-loc-${index}-address`}>{d.fields.address}</label>
                       <input
                         id={`lab-loc-${index}-address`}
                         type="text"
@@ -160,7 +167,7 @@ export default function LaboratoryForm() {
                   </div>
                   <div className="reg-grid reg-grid-3">
                     <div className="field">
-                      <label htmlFor={`lab-loc-${index}-city`}>City</label>
+                      <label htmlFor={`lab-loc-${index}-city`}>{d.fields.city}</label>
                       <input
                         id={`lab-loc-${index}-city`}
                         type="text"
@@ -169,16 +176,16 @@ export default function LaboratoryForm() {
                       />
                     </div>
                     <div className="field">
-                      <label htmlFor={`lab-loc-${index}-state`}>State</label>
+                      <label htmlFor={`lab-loc-${index}-state`}>{d.fields.state}</label>
                       <select
                         id={`lab-loc-${index}-state`}
                         value={loc.state}
                         onChange={(e) => updateLocation(index, 'state', e.target.value)}
                       >
                         <option value="" disabled>
-                          Select state
+                          {t.selectState}
                         </option>
-                        {US_STATES.map((s) => (
+                        {o.states.map((s) => (
                           <option key={s} value={s}>
                             {s}
                           </option>
@@ -186,7 +193,7 @@ export default function LaboratoryForm() {
                       </select>
                     </div>
                     <div className="field">
-                      <label htmlFor={`lab-loc-${index}-zip`}>ZIP</label>
+                      <label htmlFor={`lab-loc-${index}-zip`}>{t.zipShort}</label>
                       <input
                         id={`lab-loc-${index}-zip`}
                         type="text"
@@ -198,7 +205,7 @@ export default function LaboratoryForm() {
                   </div>
                   <div className="reg-grid">
                     <div className="field">
-                      <label htmlFor={`lab-loc-${index}-phone`}>Phone</label>
+                      <label htmlFor={`lab-loc-${index}-phone`}>{t.phone}</label>
                       <input
                         id={`lab-loc-${index}-phone`}
                         type="tel"
@@ -207,7 +214,7 @@ export default function LaboratoryForm() {
                       />
                     </div>
                     <div className="field">
-                      <label htmlFor={`lab-loc-${index}-hours`}>Operating Hours</label>
+                      <label htmlFor={`lab-loc-${index}-hours`}>{t.operatingHours}</label>
                       <input
                         id={`lab-loc-${index}-hours`}
                         type="text"
@@ -220,18 +227,18 @@ export default function LaboratoryForm() {
               ))}
             </div>
           ) : (
-            <p className="reg-empty">Only the main address above so far. Add a location for every additional collection site.</p>
+            <p className="reg-empty">{d.common.noLocations}</p>
           )}
           <button
             type="button"
             className="btn btn-ghost reg-add"
             onClick={() => form.set('locations', [...values.locations, { ...EMPTY_LOCATION }])}
           >
-            + Add Another Location
+            {d.common.addLocation}
           </button>
         </FormSection>
 
-        <SubmitRow label="Submit Laboratory Registration" submitting={status === 'submitting'} />
+        <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>
   );

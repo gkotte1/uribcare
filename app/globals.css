@@ -1651,7 +1651,9 @@ details.q .a {
 .field label .req { color: var(--apricot-deep); }
 .field input, .field select, .field textarea {
   font-family: var(--sans); font-size: 1rem; color: var(--ink);
-  background: var(--paper);
+  /* longhand throughout: the `background` shorthand would reset the select
+     chevron's background-image */
+  background-color: var(--paper);
   border: 1px solid var(--line-2);
   border-radius: var(--r-sm);
   padding: .82rem .95rem; width: 100%;
@@ -1661,19 +1663,37 @@ details.q .a {
 }
 .field input::placeholder, .field textarea::placeholder { color: var(--ink-faint); }
 .field textarea { resize: vertical; min-height: 104px; line-height: 1.55; }
+/* Selects carry their own chevron because `appearance: none` above removes the
+   native one. A data-URI cannot read a custom property, so the stroke is
+   restated per theme: the single muted colour it used before was close to
+   invisible against the dark field background. Only `.field select` gets this,
+   so text, date and textarea fields stay unchanged. */
 .field select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%23649089' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right .85rem center;
-  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%230B6259' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .85rem center;
+  background-size: 20px 20px;
+  /* keeps the longest selected value clear of the chevron */
+  padding-right: 2.6rem;
 }
+:root[data-theme="dark"] .field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%2345CBB9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%2345CBB9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  }
+}
+/* IE/Edge legacy arrow, so there is never a second chevron */
+.field select::-ms-expand { display: none; }
 .field input:hover, .field select:hover, .field textarea:hover { border-color: var(--line-3); }
 .field input:focus, .field select:focus, .field textarea:focus {
   outline: none;
   border-color: var(--pine);
-  background: var(--card);
+  background-color: var(--card);
   box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--pine) 18%, transparent);
 }
-.field.err input, .field.err select, .field.err textarea { border-color: var(--danger); background: color-mix(in srgb, var(--danger-tint) 45%, var(--paper)); }
+.field.err input, .field.err select, .field.err textarea { border-color: var(--danger); background-color: color-mix(in srgb, var(--danger-tint) 45%, var(--paper)); }
 .field.err input:focus, .field.err select:focus { box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--danger) 20%, transparent); }
 .field .msg { font-size: .795rem; color: var(--danger); font-weight: 500; display: none; }
 .field.err .msg { display: block; }
@@ -1899,10 +1919,10 @@ footer.ft::before {
 .reg-card-body .field select:disabled { opacity: .6; cursor: not-allowed; }
 .reg-card-body .field input,
 .reg-card-body .field select,
-.reg-card-body .field textarea { background: var(--card); }
+.reg-card-body .field textarea { background-color: var(--card); }
 .reg-card-body .field input:focus,
 .reg-card-body .field select:focus,
-.reg-card-body .field textarea:focus { background: var(--card); }
+.reg-card-body .field textarea:focus { background-color: var(--card); }
 
 .reg-choicefield { display: block; border: 0; margin: 0 0 1.05rem; padding: 0; min-width: 0; }
 .reg-choicefield > legend { padding: 0; font-size: .845rem; font-weight: 600; color: var(--ink-soft); margin-bottom: .55rem; }
@@ -2221,3 +2241,52 @@ a.pchip-link:hover { border-color: var(--pine); color: var(--pine-deep); transfo
   .care-card, .care-ico { transition: none; }
   .care-card:hover, .care-card:hover .care-ico { transform: none; }
 }
+
+/* ============ LANGUAGE SWITCH ============ */
+/* A compact segmented control that sits with the CTAs and never grows enough to
+   push the theme toggle out of the bar, in either language. */
+.lang-switch {
+  display: inline-flex; align-items: center; flex: none;
+  padding: 2px; gap: 2px;
+  border: 1px solid var(--line-2); border-radius: var(--r-pill);
+  background: var(--card);
+}
+.nav-links a.lang-opt, a.lang-opt {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 34px; height: 30px; padding: 0 .45rem;
+  border-radius: var(--r-pill);
+  font-size: .76rem; font-weight: 650; letter-spacing: .04em;
+  color: var(--ink-faint); white-space: nowrap;
+  transition: color .18s var(--ease), background .18s var(--ease);
+}
+a.lang-opt::after { content: none; }
+a.lang-opt:hover { color: var(--ink); background: var(--pine-50); }
+a.lang-opt.is-active { background: var(--pine); color: #fff; }
+:root[data-theme="dark"] a.lang-opt.is-active { color: #042320; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a.lang-opt.is-active { color: #042320; } }
+a.lang-opt:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* on the narrowest bars the switcher folds away with the other secondary CTAs */
+@media (max-width: 460px) { .lang-switch { display: none; } }
+
+/* ============ HEADER FIT (EN / ES) ============ */
+/* Measured widths for the full bar: English needs ~1254px, Spanish ~1378px
+   because its labels are longer. Rather than shrink type, the bar sheds the
+   secondary CTA first and then folds the links into the existing drawer, at the
+   width each language actually stops fitting. `:lang()` reads the <html lang>
+   the locale layout sets, so this needs no JavaScript. */
+@media (max-width: 1340px) { .nav-cta .nav-hide-md { display: none; } }
+@media (max-width: 1140px) {
+  .nav-links { display: none; }
+  .nav-burger { display: grid; }
+}
+:root:lang(es) .nav-cta,
+:lang(es) .nav-cta { gap: .4rem; }
+@media (max-width: 1200px) {
+  :lang(es) .nav-links { display: none; }
+  :lang(es) .nav-burger { display: grid; }
+}
+/* The bar never wraps, and `.nav-links` keeps its automatic minimum size so it
+   can never shrink below its labels and spill over the CTA cluster. The
+   breakpoints above guarantee it always fits before that point. */
+.nav-inner { flex-wrap: nowrap; }
+.nav-cta { flex: none; }
