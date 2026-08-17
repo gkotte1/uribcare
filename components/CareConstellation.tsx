@@ -7,7 +7,31 @@ import { useEffect, useRef } from 'react';
  * around them, with data pulsing along every link. Purely decorative — the
  * canvas is aria-hidden and the labels duplicate copy already in the page.
  */
-export default function CareConstellation() {
+export type ConstellationLabels = {
+  patient: string;
+  doctor: string;
+  therapist: string;
+  counselor: string;
+  pharmacy: string;
+  lab: string;
+  nurse: string;
+};
+
+const EN_LABELS: ConstellationLabels = {
+  patient: 'Patient',
+  doctor: 'Doctor',
+  therapist: 'Therapist',
+  counselor: 'Counselor',
+  pharmacy: 'Pharmacy',
+  lab: 'Lab',
+  nurse: 'Nurse',
+};
+
+export default function CareConstellation({
+  labels = EN_LABELS,
+}: {
+  labels?: ConstellationLabels;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -22,12 +46,12 @@ export default function CareConstellation() {
     let W = 0, H = 0, DPR = 1, cx = 0, cy = 0, R = 0, S = 1;
 
     const nodes = [
-      { label: 'Doctor', a: -Math.PI / 2 },
-      { label: 'Therapist', a: -Math.PI / 2 + TAU / 6 },
-      { label: 'Counselor', a: -Math.PI / 2 + 2 * (TAU / 6) },
-      { label: 'Pharmacy', a: -Math.PI / 2 + 3 * (TAU / 6) },
-      { label: 'Lab', a: -Math.PI / 2 + 4 * (TAU / 6) },
-      { label: 'Nurse', a: -Math.PI / 2 + 5 * (TAU / 6) },
+      { label: labels.doctor, a: -Math.PI / 2 },
+      { label: labels.therapist, a: -Math.PI / 2 + TAU / 6 },
+      { label: labels.counselor, a: -Math.PI / 2 + 2 * (TAU / 6) },
+      { label: labels.pharmacy, a: -Math.PI / 2 + 3 * (TAU / 6) },
+      { label: labels.lab, a: -Math.PI / 2 + 4 * (TAU / 6) },
+      { label: labels.nurse, a: -Math.PI / 2 + 5 * (TAU / 6) },
     ];
 
     const cssVar = (n: string) => getComputedStyle(root).getPropertyValue(n).trim();
@@ -189,7 +213,7 @@ export default function CareConstellation() {
       ctx!.font = `650 ${11.5 * S}px ${cssVar('--font-sans') || 'Inter'}, -apple-system, Segoe UI, sans-serif`;
       ctx!.textAlign = 'center';
       ctx!.textBaseline = 'middle';
-      ctx!.fillText('Patient', cx, cy + 38 * S);
+      ctx!.fillText(labels.patient, cx, cy + 38 * S);
 
       if (!reduceM) rafId = requestAnimationFrame(draw);
     }
@@ -224,7 +248,7 @@ export default function CareConstellation() {
       mo.disconnect();
       cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [labels]);
 
   return <canvas id="careCanvas" aria-hidden="true" ref={canvasRef} />;
 }

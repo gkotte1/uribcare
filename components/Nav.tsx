@@ -5,25 +5,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CategoryIcon from '@/components/CategoryIcon';
-import { ECOSYSTEM_NAV, SERVICE_NAV } from '@/content/nav';
+import LanguageToggle from '@/components/LanguageToggle';
 import type { NavItem } from '@/content/nav';
+import {
+  anchorBase,
+  ecosystemNav,
+  getDictionary,
+  homePath,
+  serviceNav,
+  type Locale,
+} from '@/content/i18n';
 
 type MenuId = 'services' | 'ecosystem';
-
-/** Category lists behind the Services and Ecosystem nav items. */
-const MENUS: Record<MenuId, { items: NavItem[]; allLabel: string }> = {
-  services: { items: SERVICE_NAV, allLabel: 'View the services section' },
-  ecosystem: { items: ECOSYSTEM_NAV, allLabel: 'View the ecosystem section' },
-};
-
-/** `route: true` marks a link to its own page rather than a home page section. */
-const LINKS: { href: string; label: string; menu?: MenuId; route?: boolean }[] = [
-  { href: '#services', label: 'Services', menu: 'services' },
-  { href: '#ecosystem', label: 'Ecosystem', menu: 'ecosystem' },
-  { href: '#journey', label: 'How it works' },
-  { href: '/autism-care', label: 'Autism care', route: true },
-  { href: '#trust', label: 'Security' },
-];
 
 const Caret = () => (
   <svg className="nav-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -31,7 +24,12 @@ const Caret = () => (
   </svg>
 );
 
-export default function Nav() {
+/**
+ * Site header. `locale` selects the label copy, the category names behind the
+ * dropdowns and the anchor prefix; it defaults to English so the existing
+ * English routes render exactly as before.
+ */
+export default function Nav({ locale = 'en' }: { locale?: Locale }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<MenuId | null>(null);
@@ -40,10 +38,27 @@ export default function Nav() {
   const headerRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
-  // On the home page the section links stay as in-page anchors; anywhere else
-  // they need to point back at the home page first.
-  const base = pathname === '/' ? '' : '/';
-  const isHome = pathname === '/';
+  const t = getDictionary(locale).nav;
+  const home = homePath(locale);
+
+  /** `route: true` marks a link to its own page rather than a home page section. */
+  const LINKS: { href: string; label: string; menu?: MenuId; route?: boolean }[] = [
+    { href: '#services', label: t.links.services, menu: 'services' },
+    { href: '#ecosystem', label: t.links.ecosystem, menu: 'ecosystem' },
+    { href: '#journey', label: t.links.journey },
+    { href: '/autism-care', label: t.links.autismCare, route: true },
+    { href: '#trust', label: t.links.security },
+  ];
+
+  const MENUS: Record<MenuId, { items: NavItem[]; allLabel: string }> = {
+    services: { items: serviceNav(locale), allLabel: t.allServices },
+    ecosystem: { items: ecosystemNav(locale), allLabel: t.allEcosystem },
+  };
+
+  // On its own home page the section links stay as in-page anchors; anywhere else
+  // they need to point back at that language's home page first.
+  const isHome = pathname === home;
+  const base = isHome ? '' : anchorBase(locale) || '/';
 
   // nav scrolled state + reading progress
   useEffect(() => {
@@ -77,6 +92,7 @@ export default function Nav() {
     );
     sections.forEach((s) => io.observe(s));
     return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHome]);
 
   // close the drawer on Escape, and lock body scroll while it is open
@@ -86,7 +102,7 @@ export default function Nav() {
       if (e.key === 'Escape') setOpen(false);
     };
     const onResize = () => {
-      if (window.innerWidth > 1080) setOpen(false);
+      if (window.innerWidth > 1200) setOpen(false);
     };
     document.addEventListener('keydown', onKey);
     window.addEventListener('resize', onResize);
@@ -157,11 +173,11 @@ export default function Nav() {
           aria-hidden="true"
         />
         <div className="wrap nav-inner">
-          <a className="brand" href={`${base}#top`} aria-label="URIBCARE home" onClick={close}>
+          <a className="brand" href={`${base}#top`} aria-label={t.brandHome} onClick={close}>
             <img className="brand-logo" src="/images/logo.png" alt="URIBCARE" width={200} height={67} decoding="sync" />
           </a>
 
-          <nav className="nav-links" aria-label="Primary">
+          <nav className="nav-links" aria-label={t.ariaPrimary}>
             {LINKS.map((l) => {
               const isActive = l.route ? pathname === l.href : isHome && active === l.href.slice(1);
 
@@ -220,19 +236,23 @@ export default function Nav() {
             })}
           </nav>
 
-          <div className="nav-cta">
+          {/* data-locale lets CSS give the longer Spanish labels more room
+              without altering the English bar at any width. */}
+          <div className="nav-cta" data-locale={locale}>
+            <LanguageToggle locale={locale} className="nav-lang" />
+
             <a href={`${base}#contact`} className="btn btn-quiet nav-hide-md">
-              Book a demo
+              {t.bookDemo}
             </a>
             <Link href="/register" className="btn btn-ghost nav-hide-sm">
-              Registration
+              {t.registration}
             </Link>
             <a href={`${base}#contact`} className="btn btn-primary">
-              Start free trial
+              {t.startTrial}
             </a>
 
             {/* last control on the right, after the CTAs */}
-            <button className="icon-btn theme-toggle" id="themeBtn" aria-label="Toggle light and dark theme" onClick={toggleTheme}>
+            <button className="icon-btn theme-toggle" id="themeBtn" aria-label={t.themeToggle} onClick={toggleTheme}>
               <svg className="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="4.2" />
                 <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" />
@@ -244,7 +264,7 @@ export default function Nav() {
 
             <button
               className="icon-btn nav-burger"
-              aria-label={open ? 'Close menu' : 'Open menu'}
+              aria-label={open ? t.closeMenu : t.openMenu}
               aria-expanded={open}
               aria-controls="nav-drawer"
               onClick={() => {
@@ -263,7 +283,7 @@ export default function Nav() {
       {open && <div className="nav-scrim" onClick={close} aria-hidden="true" />}
 
       <div className={`nav-drawer${open ? ' open' : ''}`} id="nav-drawer" hidden={!open}>
-        <nav aria-label="Mobile">
+        <nav aria-label={t.ariaMobile}>
           {LINKS.map((l) =>
             l.route ? (
               <Link
@@ -300,14 +320,18 @@ export default function Nav() {
           )}
         </nav>
         <div className="drawer-actions">
+          <div className="drawer-lang">
+            <span className="drawer-lang-label">{t.language.label}</span>
+            <LanguageToggle locale={locale} />
+          </div>
           <Link href="/register" className="btn btn-ghost" onClick={close}>
-            Registration
+            {t.registration}
           </Link>
           <a href={`${base}#contact`} className="btn btn-ghost" onClick={close}>
-            Book a demo
+            {t.bookDemo}
           </a>
           <a href={`${base}#contact`} className="btn btn-primary" onClick={close}>
-            Start free trial
+            {t.startTrial}
           </a>
         </div>
       </div>
