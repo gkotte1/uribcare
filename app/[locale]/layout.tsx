@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { notFound } from 'next/navigation';
-import { LOCALES, alternatesFor, isLocale } from '@/lib/i18n';
+import { LOCALES, SITE_URL, alternatesFor, isLocale } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 import '../globals.css';
 
@@ -45,9 +45,41 @@ const META: Record<Locale, { title: string; description: string }> = {
   },
 };
 
+/** The social preview card. Lives in `public`, so the path is origin-relative. */
+const OG_IMAGE = '/images/og-uribcare.png';
+
+const OG_LOCALE: Record<Locale, string> = { en: 'en_US', es: 'es_ES' };
+
+const OG_ALT: Record<Locale, string> = {
+  en: 'The Uribcare wordmark on a dark green background',
+  es: 'El logotipo de Uribcare sobre un fondo verde oscuro',
+};
+
+/**
+ * Open Graph and Twitter cards are declared once, here, so every route inherits
+ * them. Deliberately no `title`, `description` or `url` in the `openGraph`
+ * block: leaving those out lets Next fall back to each page's own resolved
+ * title and description instead of pinning the home page's copy onto every
+ * child route.
+ */
 export function generateMetadata({ params }: Params): Metadata {
   const locale: Locale = isLocale(params.locale) ? params.locale : 'en';
-  return { ...META[locale], alternates: alternatesFor('/') };
+  return {
+    ...META[locale],
+    metadataBase: new URL(SITE_URL),
+    alternates: alternatesFor('/'),
+    openGraph: {
+      type: 'website',
+      siteName: 'Uribcare',
+      locale: OG_LOCALE[locale],
+      alternateLocale: LOCALES.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
+      images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: OG_ALT[locale] }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: [{ url: OG_IMAGE, alt: OG_ALT[locale] }],
+    },
+  };
 }
 
 export const viewport: Viewport = {
