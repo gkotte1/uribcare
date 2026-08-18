@@ -45,15 +45,19 @@ const META: Record<Locale, { title: string; description: string }> = {
   },
 };
 
-/** The social preview card. Lives in `public`, so the path is origin-relative. */
-const OG_IMAGE = '/images/og-uribcare.png';
+/**
+ * The social preview card. The URL is absolute and pinned to the production
+ * origin, so crawlers resolve it correctly whatever host rendered the page.
+ * The file itself is the supplied artwork in `public/images`, used unmodified.
+ */
+const OG_IMAGE = {
+  url: 'https://uribcare.fh.bio/images/og-uribcare.png',
+  width: 1536,
+  height: 1024,
+  alt: 'URIBCARE',
+};
 
 const OG_LOCALE: Record<Locale, string> = { en: 'en_US', es: 'es_ES' };
-
-const OG_ALT: Record<Locale, string> = {
-  en: 'The Uribcare wordmark on a dark green background',
-  es: 'El logotipo de Uribcare sobre un fondo verde oscuro',
-};
 
 /**
  * Open Graph and Twitter cards are declared once, here, so every route inherits
@@ -73,11 +77,11 @@ export function generateMetadata({ params }: Params): Metadata {
       siteName: 'Uribcare',
       locale: OG_LOCALE[locale],
       alternateLocale: LOCALES.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
-      images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: OG_ALT[locale] }],
+      images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      images: [{ url: OG_IMAGE, alt: OG_ALT[locale] }],
+      images: [OG_IMAGE],
     },
   };
 }
