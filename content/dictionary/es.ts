@@ -15,6 +15,7 @@ export const es: Dictionary = {
     ecosystem: 'Ecosistema',
     howItWorks: 'Cómo funciona',
     autismCare: 'Autismo',
+    blog: 'Blog',
     security: 'Seguridad',
     bookDemo: 'Ver demo',
     registration: 'Registro',
@@ -47,6 +48,11 @@ export const es: Dictionary = {
     getInTouch: 'Contacto',
     rights: 'URiBCare LLC. Todos los derechos reservados.',
     badge: 'Preparado para HIPAA · Atención en línea y presencial',
+  },
+  article: {
+    onThisPage: 'En esta página',
+    related: 'Descubra más de Uribcare',
+    backToBlog: 'Volver a todos los artículos',
   },
   detail: {
     home: 'Inicio',

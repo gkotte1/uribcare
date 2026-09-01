@@ -2242,6 +2242,303 @@ a.pchip-link:hover { border-color: var(--pine); color: var(--pine-deep); transfo
   .care-card:hover, .care-card:hover .care-ico { transform: none; }
 }
 
+/* ============ BLOG ============ */
+/* The listing borrows the home page card shell (`.svc-card`, `.svc-media`,
+   `.svc-tag`, `.svc-body`), so an article card inherits the same border,
+   elevation, hover lift and column behaviour for free. Only what a card cannot
+   borrow lives here: the hero wash, the featured split, the artwork
+   placeholder, the meta row and the closing panel. */
+
+.blog-hero { position: relative; isolation: isolate; padding-bottom: clamp(1.6rem, 3.5vw, 2.6rem); }
+.blog-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(60% 68% at 16% 0%, var(--tint-a), transparent 72%),
+    radial-gradient(46% 56% at 90% 14%, var(--tint-b), transparent 74%);
+}
+.blog-hero-head { max-width: 46rem; }
+.blog-hero-head h1 { font-size: clamp(2.4rem, 5.2vw, 3.8rem); margin-top: 1.1rem; }
+.blog-hero-head .lead { margin-top: 1.15rem; max-width: 56ch; }
+
+/* --- featured article --- */
+.blog-featured {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+  border-radius: var(--r-xl);
+  /* fixed hexes, not the --pine-* ramp: that ramp inverts in dark mode and
+     would strand the white heading on a near-white panel */
+  background: linear-gradient(152deg, #0E4A43 0%, #0A342F 58%, #072722 100%);
+  box-shadow: var(--sh-xl);
+  color: #EAFCF8;
+}
+:root[data-theme="dark"] .blog-featured { border: 1px solid var(--line-2); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .blog-featured { border: 1px solid var(--line-2); } }
+.blog-featured::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(42% 55% at 92% 6%, rgba(238,131,84,.22), transparent 70%),
+    radial-gradient(45% 50% at 4% 96%, rgba(69,203,185,.18), transparent 70%);
+}
+.blog-featured > * { position: relative; z-index: 1; }
+@media (max-width: 900px) { .blog-featured { grid-template-columns: 1fr; } }
+
+.bf-media { position: relative; overflow: hidden; min-height: 100%; background: #08302B; }
+/* The artwork's own text sits in its left 4%-55%, so a centred crop would clip
+   the URiBCARE mark. Biasing the focal point left keeps the branding and the
+   headline whole and takes the crop off the photographic right edge instead. */
+.bf-media img {
+  width: 100%; height: 100%; display: block;
+  object-fit: cover; object-position: 12% center;
+}
+@media (max-width: 900px) {
+  /* Stacked: a shallow band above the copy rather than a tall block. 16/10
+     rather than 16/9 because 16/9 shaves the logo off the top of the artwork. */
+  .bf-media { aspect-ratio: 16 / 10; min-height: 0; }
+  .bf-media img { object-position: center 48%; }
+}
+
+.bf-body {
+  align-self: center;
+  display: flex; flex-direction: column; gap: .8rem;
+  padding: clamp(1.75rem, 4vw, 3.1rem);
+}
+.bf-flags { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; margin: 0; }
+.bf-badge {
+  font-family: var(--sans); font-size: .71rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: #4A1D06;
+  background: var(--apricot); padding: .34rem .72rem; border-radius: var(--r-pill);
+}
+.bf-cat {
+  font-family: var(--sans); font-size: .74rem; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase; color: #C6E5DF;
+  border: 1px solid rgba(255,255,255,.26);
+  padding: .3rem .72rem; border-radius: var(--r-pill);
+}
+.bf-title { color: #fff; font-size: clamp(1.55rem, 3vw, 2.25rem); margin-top: .3rem; }
+.bf-excerpt { color: #C6E5DF; font-size: 1.01rem; line-height: 1.62; max-width: 48ch; margin: 0; }
+
+/* --- artwork placeholder (used until real artwork is supplied) --- */
+.blog-ph {
+  position: absolute; inset: 0; display: block;
+  background:
+    radial-gradient(58% 62% at 78% 12%, rgba(238,131,84,.26), transparent 70%),
+    radial-gradient(56% 60% at 12% 88%, rgba(69,203,185,.24), transparent 72%),
+    linear-gradient(152deg, #0E4A43, #0A342F 60%, #072722);
+}
+.blog-ph::after {
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.075) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.075) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(86% 82% at 44% 42%, #000, transparent 82%);
+  -webkit-mask-image: radial-gradient(86% 82% at 44% 42%, #000, transparent 82%);
+}
+
+/* --- date + reading time --- */
+.blog-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .85rem;
+  list-style: none; margin: .3rem 0 0; padding: 0;
+  /* --ink-soft, not --ink-faint: at .84rem the faint token lands at 4.28:1 on
+     the card surface, just under the 4.5:1 AA threshold for normal text. */
+  font-family: var(--sans); font-size: .84rem; color: var(--ink-soft);
+}
+.blog-meta li { display: inline-flex; align-items: center; gap: .85rem; }
+.blog-meta li + li::before {
+  content: ""; width: 3px; height: 3px; border-radius: 50%;
+  background: currentColor; opacity: .65; flex: none;
+}
+.blog-featured .blog-meta { color: #9FC9C2; }
+
+/* --- read affordance --- */
+/* An article with no page yet is static text plus a worded badge, never a link
+   into a 404, so the state never rests on colour alone. */
+.blog-pending {
+  display: inline-flex; align-items: center; flex-wrap: wrap; gap: .6rem;
+  margin: .55rem 0 0; min-height: 44px;
+  font-family: var(--sans); font-weight: 600; font-size: .93rem; color: var(--ink-soft);
+}
+.blog-soon {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--apricot-ink); background: var(--apricot-tint);
+  border: 1px solid color-mix(in srgb, var(--apricot) 34%, transparent);
+  padding: .26rem .62rem; border-radius: var(--r-pill);
+}
+.blog-featured .blog-pending { color: #BFE3DC; }
+.blog-featured .blog-soon { color: #FFD9C4; background: rgba(238,131,84,.16); border-color: rgba(238,131,84,.44); }
+
+/* --- listing grid --- */
+/* auto-fill keeps a lone article at a natural card width instead of stretching
+   it across the row, and takes extra columns as more articles are published.
+   The 26rem track deliberately yields two columns at full width: a single card
+   then reads as a grid with room to grow rather than one narrow card stranded
+   in a three-column row. */
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
+  gap: var(--gap);
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+.blog-card { height: 100%; }
+/* Scoped to `.blog-card` so the home page service cards keep `center 38%`. */
+.blog-card .svc-media img { object-position: 25% center; }
+/* The service-card treatment darkens the lower half of the photo so the tag can
+   sit on it. Article artwork carries its own typography, so that veil is
+   dropped here and the tag earns its contrast from its own backdrop instead. */
+.blog-card .svc-media::after { display: none; }
+/* Moved off the artwork's bottom-left, where it landed on the image's own
+   caption card; the lower right of the composition is quiet. */
+.blog-card .svc-tag {
+  left: auto; right: 1rem;
+  background: rgba(4, 25, 22, .66);
+  border-color: rgba(255, 255, 255, .3);
+}
+.blog-card .svc-body h3 { font-size: 1.18rem; line-height: 1.28; }
+
+/* --- closing CTA --- */
+.blog-cta {
+  position: relative; overflow: hidden; text-align: center;
+  border-radius: var(--r-lg);
+  padding: clamp(2.5rem, 6vw, 4.3rem) clamp(1.4rem, 4vw, 3rem);
+  background: linear-gradient(150deg, #12574e, #0b3b35 62%, #082e2a);
+  color: #fff; box-shadow: var(--sh-lg);
+}
+:root[data-theme="dark"] .blog-cta { border: 1px solid var(--line-2); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .blog-cta { border: 1px solid var(--line-2); } }
+.blog-cta h2 { position: relative; z-index: 1; color: #fff; font-size: clamp(1.9rem, 4.2vw, 2.9rem); }
+.blog-cta p { position: relative; z-index: 1; color: #D3EDE8; margin: 1.05rem auto 0; max-width: 52ch; }
+.blog-cta-actions { position: relative; z-index: 1; display: flex; justify-content: center; margin: 1.75rem 0 0; }
+.blog-cta .cta-glow {
+  position: absolute; width: 420px; height: 420px; border-radius: 50%;
+  filter: blur(60px); opacity: .35; pointer-events: none;
+}
+.blog-cta .cta-glow.a { background: var(--apricot); top: -140px; right: -80px; }
+.blog-cta .cta-glow.b { background: var(--sage); bottom: -160px; left: -60px; }
+
+/* ============ BLOG ARTICLE ============ */
+/* A single reading column, narrower than `.wrap`, with the hero figure allowed
+   to run to the full container width for contrast. Everything else is borrowed
+   from the design system: `.band`, `.detail-crumbs`, `.pchip`, `.blog-cta`. */
+
+.article-main { --measure: 68ch; }
+.article-col { max-width: var(--measure); margin-inline: auto; }
+
+.article-hero { position: relative; isolation: isolate; padding-bottom: 0; }
+.article-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(58% 66% at 22% 0%, var(--tint-a), transparent 72%),
+    radial-gradient(44% 54% at 86% 10%, var(--tint-b), transparent 74%);
+}
+.article-head h1 { font-size: clamp(2.05rem, 4.2vw, 3.25rem); margin-top: 1rem; line-height: 1.08; }
+.article-head .lead { margin-top: 1.1rem; }
+.article-head .blog-meta { margin-top: 1.35rem; }
+
+.article-flags { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: 0; }
+.article-cat {
+  font-family: var(--sans); font-size: .72rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--apricot-ink); background: var(--apricot-tint);
+  border: 1px solid color-mix(in srgb, var(--apricot) 34%, transparent);
+  padding: .32rem .72rem; border-radius: var(--r-pill);
+}
+.article-pub {
+  font-family: var(--sans); font-size: .72rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--pine-deep);
+}
+
+/* A controlled editorial band rather than a full-height block: the figure sets
+   the ratio and the artwork covers it. 32/19 (16:9.5) is the tightest ratio the
+   supplied artwork tolerates - its own content runs from 5.5% to 91% of the
+   file's height, so 16:9 already shaves the URiBCARE logo and the footer card.
+   The 48% Y position matches that content's optical centre. Width is capped to
+   the reading measure so the hero and the prose share one edge. */
+.article-figure {
+  position: relative; overflow: hidden;
+  margin: clamp(1.75rem, 3.5vw, 2.75rem) auto 0;
+  max-width: var(--measure);
+  aspect-ratio: 32 / 19;
+  border-radius: var(--r-lg); background: #08302B;
+  box-shadow: var(--sh-lg); border: 1px solid var(--line);
+}
+.article-figure img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 48%;
+}
+.article-figure.is-placeholder { aspect-ratio: 21 / 9; }
+@media (max-width: 760px) {
+  .article-figure { aspect-ratio: 16 / 10; }
+  .article-figure.is-placeholder { aspect-ratio: 16 / 10; }
+}
+
+/* --- contents --- */
+.article-toc {
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--card-2); padding: clamp(1.15rem, 2.5vw, 1.6rem) clamp(1.2rem, 3vw, 1.9rem);
+}
+.article-toc h2 {
+  font-family: var(--sans); font-size: .74rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--pine-deep);
+}
+.article-toc ol { margin: .9rem 0 0; padding: 0 0 0 1.15rem; display: grid; gap: .5rem; }
+.article-toc li { color: var(--ink-faint); font-size: .95rem; }
+.article-toc a { color: var(--ink-soft); text-decoration-color: transparent; transition: color .18s var(--ease); }
+.article-toc a:hover { color: var(--pine-deep); }
+
+/* --- prose --- */
+.article-prose { margin-top: clamp(2.25rem, 5vw, 3.5rem); }
+.article-sec { scroll-margin-top: calc(var(--nav-h) + 1.5rem); }
+.article-sec + .article-sec { margin-top: clamp(2.25rem, 4.5vw, 3.25rem); }
+.article-sec h2 { font-size: clamp(1.5rem, 2.9vw, 2.05rem); line-height: 1.16; }
+.article-sec > * + * { margin-top: 1.1rem; }
+.article-prose p { font-size: 1.06rem; line-height: 1.75; color: var(--ink-soft); }
+.article-prose a { color: var(--pine-deep); font-weight: 550; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.article-prose a:hover { color: var(--pine); }
+
+.article-list { margin: 1.15rem 0 0; padding-left: 1.35rem; display: grid; gap: .6rem; }
+.article-list li { font-size: 1.04rem; line-height: 1.65; color: var(--ink-soft); padding-left: .25rem; }
+.article-list li::marker { color: var(--pine); font-weight: 700; }
+.article-list-num li::marker { font-family: var(--sans); font-size: .95rem; }
+
+.article-quote {
+  margin: 1.6rem 0 0; padding: .2rem 0 .2rem 1.35rem;
+  border-left: 3px solid var(--apricot);
+  font-family: var(--serif); font-style: italic; font-size: 1.18rem; line-height: 1.5; color: var(--ink);
+}
+
+/* --- related + back --- */
+.article-related {
+  margin-top: clamp(2.5rem, 5vw, 3.75rem);
+  padding-top: clamp(1.75rem, 3.5vw, 2.5rem);
+  border-top: 1px solid var(--line);
+}
+.article-related h2 {
+  font-family: var(--sans); font-size: .74rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--pine-deep);
+}
+.article-related .provider-row { margin-top: 1.15rem; }
+.article-back { margin-top: clamp(1.75rem, 3.5vw, 2.5rem); }
+
+/* The closing panel reuses `.blog-cta`; the heading just needs to stay white
+   when it carries a link. */
+.blog-cta h2 a { color: inherit; text-decoration: none; }
+.blog-cta h2 a:hover { text-decoration: underline; text-underline-offset: 6px; }
+
+/* --- listing links, now that the article exists --- */
+.blog-card { position: relative; }
+.blog-card .svc-body h3 a { color: inherit; }
+.blog-card:hover .svc-body h3 a { color: var(--pine-deep); }
+/* Stretches the read link across the whole card so the card itself is
+   clickable. `.svc-media` is positioned, so without an explicit z-index it
+   paints over the overlay and swallows clicks on the artwork; the layers below
+   are ordered media (auto) < tag (2) < stretched link (3) < title (4) so both
+   links stay independently focusable. */
+.blog-card .arrow-link::after { content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; }
+.blog-card .svc-body h3 a { position: relative; z-index: 4; }
+.bf-title a { color: inherit; text-decoration: none; }
+.bf-title a:hover { text-decoration: underline; text-underline-offset: 5px; }
+
 /* ============ LANGUAGE SWITCH ============ */
 /* A compact segmented control that sits with the CTAs and never grows enough to
    push the theme toggle out of the bar, in either language. */

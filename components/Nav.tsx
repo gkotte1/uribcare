@@ -13,13 +13,14 @@ import { LOCALES, SHOW_LANGUAGE_SWITCHER, localeFromPath, localeHref, stripLocal
 type MenuId = 'services' | 'ecosystem';
 
 /** `route: true` marks a link to its own page rather than a home page section. */
-type NavLink = { href: string; labelKey: 'services' | 'ecosystem' | 'howItWorks' | 'autismCare' | 'security'; menu?: MenuId; route?: boolean };
+type NavLink = { href: string; labelKey: 'services' | 'ecosystem' | 'howItWorks' | 'autismCare' | 'blog' | 'security'; menu?: MenuId; route?: boolean };
 
 const LINKS: NavLink[] = [
   { href: '#services', labelKey: 'services', menu: 'services' },
   { href: '#ecosystem', labelKey: 'ecosystem', menu: 'ecosystem' },
   { href: '#journey', labelKey: 'howItWorks' },
   { href: '/autism-care', labelKey: 'autismCare', route: true },
+  { href: '/blog', labelKey: 'blog', route: true },
   { href: '#trust', labelKey: 'security' },
 ];
 
@@ -172,7 +173,10 @@ export default function Nav() {
 
           <nav className="nav-links" aria-label={t.nav.primaryLabel}>
             {LINKS.map((l) => {
-              const isActive = l.route ? route === l.href : isHome && active === l.href.slice(1);
+              // a route link stays active on its child pages, e.g. /blog on an article
+              const isActive = l.route
+                ? route === l.href || route.startsWith(`${l.href}/`)
+                : isHome && active === l.href.slice(1);
 
               if (l.route) {
                 return (
@@ -301,7 +305,7 @@ export default function Nav() {
                 key={l.href}
                 className="dl"
                 href={path(l.href)}
-                aria-current={route === l.href ? 'true' : undefined}
+                aria-current={route === l.href || route.startsWith(`${l.href}/`) ? 'true' : undefined}
                 onClick={close}
               >
                 {t.nav[l.labelKey]}

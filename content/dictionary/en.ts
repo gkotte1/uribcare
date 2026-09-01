@@ -12,6 +12,7 @@ export const en = {
     ecosystem: 'Ecosystem',
     howItWorks: 'How it works',
     autismCare: 'Autism care',
+    blog: 'Blog',
     security: 'Security',
     bookDemo: 'Book a demo',
     registration: 'Registration',
@@ -44,6 +45,11 @@ export const en = {
     getInTouch: 'Get in touch',
     rights: 'URiBCare LLC. All rights reserved.',
     badge: 'HIPAA-ready · Online & in-person care',
+  },
+  article: {
+    onThisPage: 'On this page',
+    related: 'Explore more from Uribcare',
+    backToBlog: 'Back to all articles',
   },
   detail: {
     home: 'Home',
