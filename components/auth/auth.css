@@ -1,0 +1,125 @@
+/* =========================================================================
+   URIBCARE — AUTH
+   A minimal, centered auth layout that reuses the site's design tokens from
+   globals.css. Works in light and dark (the site toggles data-theme on <html>).
+   Only component-scoped styles live here; tokens and the .field, .btn and
+   .eyebrow primitives come from globals.css.
+   ========================================================================= */
+
+.auth-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(46% 38% at 82% 0%, color-mix(in srgb, var(--pine) 10%, transparent), transparent 70%),
+    radial-gradient(42% 36% at 8% 4%, color-mix(in srgb, var(--apricot) 8%, transparent), transparent 72%),
+    var(--paper);
+}
+
+/* top bar — just the wordmark, linking home */
+.auth-bar {
+  display: flex;
+  align-items: center;
+  height: var(--nav-h);
+  padding-inline: var(--pad-i);
+}
+.auth-bar .brand { display: inline-flex; align-items: center; flex: none; }
+.auth-bar .brand img { height: 40px; width: auto; display: block; transition: opacity .2s var(--ease); }
+.auth-bar .brand:hover img { opacity: .82; }
+:root[data-theme="dark"] .auth-bar .brand img { filter: brightness(1.18) saturate(1.05); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .auth-bar .brand img { filter: brightness(1.18) saturate(1.05); }
+}
+
+/* the centered column holding the card */
+.auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.75rem, 5vw, 3.5rem) var(--pad-i);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
+  padding: clamp(1.6rem, 4vw, 2.5rem);
+}
+
+.auth-head { margin-bottom: 1.6rem; }
+.auth-head .eyebrow { margin-bottom: .85rem; }
+.auth-head h1 {
+  font-size: clamp(1.6rem, 1.3rem + 1.4vw, 2.1rem);
+  letter-spacing: -.022em;
+}
+.auth-head p {
+  margin-top: .6rem;
+  color: var(--ink-soft);
+  font-size: .96rem;
+  line-height: 1.55;
+}
+
+/* full-width submit button */
+.auth-card .btn-block { width: 100%; }
+
+/* footer links below the form inside the card */
+.auth-foot {
+  margin-top: 1.5rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: .55rem;
+  font-size: .9rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.auth-foot a {
+  color: var(--pine-deep);
+  font-weight: 600;
+  transition: color .18s var(--ease);
+}
+.auth-foot a:hover { color: var(--pine); text-decoration: underline; text-underline-offset: 2px; }
+.auth-foot .auth-foot-row { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem; }
+
+/* status banners */
+.auth-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  border-radius: var(--r-sm);
+  padding: .8rem .95rem;
+  font-size: .9rem;
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+}
+.auth-banner svg { flex: none; margin-top: .12rem; }
+.auth-banner.err {
+  background: color-mix(in srgb, var(--danger-tint) 70%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  color: var(--danger);
+}
+.auth-banner.ok {
+  background: var(--pine-50);
+  border: 1px solid var(--pine-200);
+  color: var(--pine-deep);
+}
+
+/* setup notice (shown before Supabase env keys are added) */
+.auth-notice {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: .98rem;
+  line-height: 1.6;
+}
+.auth-notice code {
+  font-family: var(--mono);
+  font-size: .9em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  padding: .1rem .4rem;
+}

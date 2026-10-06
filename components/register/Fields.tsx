@@ -69,7 +69,7 @@ type TextFieldProps = {
   required?: boolean;
   hint?: string;
   span?: boolean;
-  type?: 'text' | 'email' | 'tel' | 'date' | 'url' | 'number';
+  type?: 'text' | 'email' | 'tel' | 'date' | 'url' | 'number' | 'password';
   placeholder?: string;
   autoComplete?: string;
   inputMode?: 'text' | 'tel' | 'email' | 'numeric' | 'url';
@@ -338,7 +338,19 @@ export function SubmitRow({ label, submitting }: { label: string; submitting: bo
   );
 }
 
-export function SuccessPanel({ heading, submission, note }: { heading: string; submission: Submission; note: string }) {
+export function SuccessPanel({
+  heading,
+  submission,
+  message,
+  note,
+}: {
+  heading: string;
+  /** Present on the local "Under Review" fallback path (reference + status). */
+  submission?: Submission | null;
+  /** Present when a server action returns a success message (e.g. confirm email). */
+  message?: string | null;
+  note: string;
+}) {
   const t = getDictionary(localeFromPath(usePathname() || '/')).register.common;
   return (
     <div className="form-success show" role="status" aria-live="polite">
@@ -348,11 +360,74 @@ export function SuccessPanel({ heading, submission, note }: { heading: string; s
         </svg>
       </div>
       <h3>{heading}</h3>
-      <p className="reg-status">{t.status} {submission.status}</p>
-      <p>{note}</p>
-      <p className="reg-ref">
-        {t.reference} <strong>{submission.reference}</strong>
-      </p>
+      {submission ? <p className="reg-status">{t.status} {submission.status}</p> : null}
+      <p>{message ?? note}</p>
+      {submission ? (
+        <p className="reg-ref">
+          {t.reference} <strong>{submission.reference}</strong>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Account-credential block shared by every registration form. */
+export function AccountSection({
+  form,
+  legend,
+  emailLabel,
+}: {
+  form: FormLike;
+  legend: string;
+  emailLabel: string;
+}) {
+  return (
+    <FormSection legend={legend}>
+      <Grid>
+        <TextField form={form} name="email" label={emailLabel} type="email" required autoComplete="email" />
+        <TextField form={form} name="username" label="Username" required autoComplete="username" />
+        <TextField
+          form={form}
+          name="password"
+          label="Password"
+          type="password"
+          required
+          autoComplete="new-password"
+          hint="At least 8 characters"
+        />
+        <TextField
+          form={form}
+          name="confirmPassword"
+          label="Confirm password"
+          type="password"
+          required
+          autoComplete="new-password"
+        />
+      </Grid>
+    </FormSection>
+  );
+}
+
+/** Form-level error banner for a failed server submission. */
+export function FormError({ message }: { message: string | null }) {
+  if (!message) return null;
+  return (
+    <div
+      className="reg-formerror"
+      role="alert"
+      aria-live="assertive"
+      style={{
+        marginTop: '1.25rem',
+        padding: '.8rem 1rem',
+        borderRadius: '10px',
+        border: '1px solid var(--danger)',
+        background: 'var(--danger-tint)',
+        color: 'var(--danger)',
+        fontSize: '.9rem',
+        fontWeight: 500,
+      }}
+    >
+      {message}
     </div>
   );
 }

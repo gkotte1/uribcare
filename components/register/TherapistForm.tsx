@@ -1,15 +1,19 @@
 'use client';
 
-import { ChoiceGroup, FileField, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
+import { AccountSection, ChoiceGroup, FileField, FormCard, FormError, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
 import { usePathname } from 'next/navigation';
+import { signUpProvider } from '@/app/actions/auth';
 import { getDictionary } from '@/content/dictionary';
 import { localeFromPath } from '@/lib/i18n';
 import { optionsFor } from './optionsFor';
 import { THERAPY_TYPES as EN_THERAPY_TYPES, isTherapyType } from './options';
-import { useRegForm } from './useRegForm';
+import { matches, minLength, useRegForm } from './useRegForm';
 import { date, email, futureDate, npi, onlyIf, phone, required, requiredChoice, upload, zip } from './validate';
 
 const INITIAL = {
+  username: '',
+  password: '',
+  confirmPassword: '',
   therapyType: '',
   area: '',
   areaOther: '',
@@ -45,25 +49,34 @@ export default function TherapistForm() {
   const d = getDictionary(locale).register;
   const t = d.forms.therapist;
   const o = optionsFor(locale);
-  const form = useRegForm('therapist', INITIAL, (v) => ({
-    therapyType: [requiredChoice(d.validation.choice)],
-    area: [requiredChoice(d.validation.choice)],
-    areaOther: [onlyIf(v.area === 'Other', required(d.validation.required))],
-    firstName: [required(d.validation.required)],
-    lastName: [required(d.validation.required)],
-    email: [required(d.validation.required), email],
-    phone: [required(d.validation.required), phone],
-    zip: [zip],
-    licenseType: [requiredChoice(d.validation.choice)],
-    licenseTypeOther: [onlyIf(v.licenseType === 'Other', required(d.validation.required))],
-    licenseNumber: [required(d.validation.required)],
-    issuingState: [requiredChoice(d.validation.choice)],
-    licenseIssueDate: [date],
-    licenseExpiration: [required(d.validation.required), futureDate],
-    npi: [npi],
-    uploadLicense: [upload],
-    uploadCertification: [upload],
-  }));
+  const form = useRegForm(
+    'therapist',
+    INITIAL,
+    (v) => ({
+      email: [required(d.validation.required), email],
+      username: [required(d.validation.required)],
+      password: [required(d.validation.required), minLength(8, 'Password must be at least 8 characters.')],
+      confirmPassword: [required(d.validation.required), matches('password')],
+      therapyType: [requiredChoice(d.validation.choice)],
+      area: [requiredChoice(d.validation.choice)],
+      areaOther: [onlyIf(v.area === 'Other', required(d.validation.required))],
+      firstName: [required(d.validation.required)],
+      lastName: [required(d.validation.required)],
+      phone: [required(d.validation.required), phone],
+      zip: [zip],
+      licenseType: [requiredChoice(d.validation.choice)],
+      licenseTypeOther: [onlyIf(v.licenseType === 'Other', required(d.validation.required))],
+      licenseNumber: [required(d.validation.required)],
+      issuingState: [requiredChoice(d.validation.choice)],
+      licenseIssueDate: [date],
+      licenseExpiration: [required(d.validation.required), futureDate],
+      npi: [npi],
+      uploadLicense: [upload],
+      uploadCertification: [upload],
+    }),
+    (values) =>
+      signUpProvider('therapist', { ...values, name: `${values.firstName} ${values.lastName}`.trim() }, locale)
+  );
 
   const { values, status } = form;
 
@@ -76,12 +89,13 @@ export default function TherapistForm() {
   const englishType = typeIndex >= 0 ? EN_THERAPY_TYPES[typeIndex] : '';
   const areaOptions = isTherapyType(englishType) ? o.therapistAreas[englishType] : [];
 
-  if (status === 'submitted' && form.submission) {
+  if (status === 'submitted') {
     return (
       <FormCard title={t.title}>
         <SuccessPanel
           heading={d.common.received}
           submission={form.submission}
+          message={form.successMessage}
           note={t.successNote}
         />
       </FormCard>
@@ -91,6 +105,8 @@ export default function TherapistForm() {
   return (
     <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
+        <AccountSection form={form} legend="Create your account" emailLabel={d.fields.professionalEmail} />
+
         <FormSection legend={d.sections.therapyFocus}>
           <Grid>
             <SelectField
@@ -123,7 +139,6 @@ export default function TherapistForm() {
           <Grid>
             <TextField form={form} name="firstName" label={d.fields.firstName} required autoComplete="given-name" />
             <TextField form={form} name="lastName" label={d.fields.lastName} required autoComplete="family-name" />
-            <TextField form={form} name="email" label={d.fields.professionalEmail} type="email" required autoComplete="email" />
             <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
             <TextField form={form} name="experience" label={d.fields.experience} type="number" inputMode="numeric" min="0" max="70" />
             <SelectField form={form} name="gender" label={d.fields.gender} options={o.genders} />
@@ -218,6 +233,7 @@ export default function TherapistForm() {
           </Grid>
         </FormSection>
 
+        <FormError message={form.formError} />
         <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>

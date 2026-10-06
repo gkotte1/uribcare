@@ -1,14 +1,18 @@
 'use client';
 
-import { ChoiceGroup, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField } from './Fields';
+import { AccountSection, ChoiceGroup, FormCard, FormError, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField } from './Fields';
 import { usePathname } from 'next/navigation';
+import { signUpProvider } from '@/app/actions/auth';
 import { getDictionary } from '@/content/dictionary';
 import { localeFromPath } from '@/lib/i18n';
 import { optionsFor } from './optionsFor';
-import { useRegForm } from './useRegForm';
+import { matches, minLength, useRegForm } from './useRegForm';
 import { email, futureDate, onlyIf, phone, required, requiredChoice, website, zip } from './validate';
 
 const INITIAL = {
+  username: '',
+  password: '',
+  confirmPassword: '',
   pharmacyName: '',
   legalName: '',
   email: '',
@@ -36,34 +40,43 @@ export default function PharmacyForm() {
   const d = getDictionary(locale).register;
   const t = d.forms.pharmacy;
   const o = optionsFor(locale);
-  const form = useRegForm('pharmacy', INITIAL, (v) => ({
-    pharmacyName: [required(d.validation.required)],
-    legalName: [required(d.validation.required)],
-    email: [required(d.validation.required), email],
-    phone: [required(d.validation.required), phone],
-    address: [required(d.validation.required)],
-    city: [required(d.validation.required)],
-    state: [requiredChoice(d.validation.choice)],
-    zip: [required(d.validation.required), zip],
-    website: [website],
-    licenseNumber: [required(d.validation.required)],
-    issuingState: [requiredChoice(d.validation.choice)],
-    licenseExpiration: [required(d.validation.required), futureDate],
-    pharmacistFirstName: [required(d.validation.required)],
-    pharmacistLastName: [required(d.validation.required)],
-    pharmacistLicenseNumber: [required(d.validation.required)],
-    pharmacistState: [requiredChoice(d.validation.choice)],
-    servicesOther: [onlyIf(v.services.includes('Other'), required(d.validation.required))],
-  }));
+  const form = useRegForm(
+    'pharmacy',
+    INITIAL,
+    (v) => ({
+      email: [required(d.validation.required), email],
+      username: [required(d.validation.required)],
+      password: [required(d.validation.required), minLength(8, 'Password must be at least 8 characters.')],
+      confirmPassword: [required(d.validation.required), matches('password')],
+      pharmacyName: [required(d.validation.required)],
+      legalName: [required(d.validation.required)],
+      phone: [required(d.validation.required), phone],
+      address: [required(d.validation.required)],
+      city: [required(d.validation.required)],
+      state: [requiredChoice(d.validation.choice)],
+      zip: [required(d.validation.required), zip],
+      website: [website],
+      licenseNumber: [required(d.validation.required)],
+      issuingState: [requiredChoice(d.validation.choice)],
+      licenseExpiration: [required(d.validation.required), futureDate],
+      pharmacistFirstName: [required(d.validation.required)],
+      pharmacistLastName: [required(d.validation.required)],
+      pharmacistLicenseNumber: [required(d.validation.required)],
+      pharmacistState: [requiredChoice(d.validation.choice)],
+      servicesOther: [onlyIf(v.services.includes('Other'), required(d.validation.required))],
+    }),
+    (values) => signUpProvider('pharmacy', { ...values, name: values.pharmacyName }, locale)
+  );
 
   const { values, status } = form;
 
-  if (status === 'submitted' && form.submission) {
+  if (status === 'submitted') {
     return (
       <FormCard title={t.title}>
         <SuccessPanel
           heading={d.common.received}
           submission={form.submission}
+          message={form.successMessage}
           note={t.successNote}
         />
       </FormCard>
@@ -73,11 +86,12 @@ export default function PharmacyForm() {
   return (
     <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
+        <AccountSection form={form} legend="Create your account" emailLabel={d.fields.businessEmail} />
+
         <FormSection legend={d.sections.business}>
           <Grid>
             <TextField form={form} name="pharmacyName" label={t.pharmacyName} required />
             <TextField form={form} name="legalName" label={t.legalName} required />
-            <TextField form={form} name="email" label={d.fields.businessEmail} type="email" required autoComplete="email" />
             <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
             <TextField form={form} name="address" label={d.fields.address} required autoComplete="street-address" span />
           </Grid>
@@ -132,6 +146,7 @@ export default function PharmacyForm() {
           />
         </FormSection>
 
+        <FormError message={form.formError} />
         <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>
