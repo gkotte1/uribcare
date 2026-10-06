@@ -231,6 +231,9 @@ export default function Nav() {
                 </div>
               );
             })}
+            <Link href={path('/search')} className="nav-find-care" onClick={close}>
+              {locale === 'es' ? 'Buscar atención' : 'Find care'}
+            </Link>
           </nav>
 
           <div className="nav-cta">
@@ -259,8 +262,8 @@ export default function Nav() {
             <a href={`${base}#contact`} className="btn btn-quiet nav-hide-md">
               {t.nav.bookDemo}
             </a>
-            <Link href={path('/register')} className="btn btn-ghost nav-hide-sm">
-              {t.nav.registration}
+            <Link href={path('/login')} className="btn btn-ghost nav-hide-sm">
+              {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
             </Link>
             <a href={`${base}#contact`} className="btn btn-primary">
               {t.nav.startTrial}
@@ -335,12 +338,15 @@ export default function Nav() {
           )}
         </nav>
         <div className="drawer-actions">
+          <Link href={path('/search')} className="btn btn-ghost" onClick={close}>
+            {locale === 'es' ? 'Buscar atención' : 'Find care'}
+          </Link>
+          <Link href={path('/login')} className="btn btn-ghost" onClick={close}>
+            {locale === 'es' ? 'Iniciar sesión' : 'Log in'}
+          </Link>
           <Link href={path('/register')} className="btn btn-ghost" onClick={close}>
             {t.nav.registration}
           </Link>
-          <a href={`${base}#contact`} className="btn btn-ghost" onClick={close}>
-            {t.nav.bookDemo}
-          </a>
           <a href={`${base}#contact`} className="btn btn-primary" onClick={close}>
             {t.nav.startTrial}
           </a>

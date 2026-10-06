@@ -12,12 +12,19 @@ export type Submission = {
   status: 'Submitted / Under Review';
 };
 
+/** Result shape returned by a real server-action submit handler. */
+export type SubmitResult = { ok: boolean; error?: string; message?: string };
+
 export type RegForm<T extends Values> = {
   idPrefix: string;
   values: T;
   errors: Record<string, string>;
   status: Status;
   submission: Submission | null;
+  /** Success message returned by a server action (e.g. "confirm your email"). */
+  successMessage: string | null;
+  /** Form-level error surfaced from a failed server submission. */
+  formError: string | null;
   formRef: React.RefObject<HTMLFormElement>;
   /** Update one field and clear any error already shown for it. */
   set: (name: string, value: FieldValue) => void;
@@ -25,6 +32,32 @@ export type RegForm<T extends Values> = {
   patch: (changes: Partial<Record<keyof T & string, FieldValue>>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 };
+
+const asText = (v: FieldValue) => (typeof v === 'string' ? v : '');
+
+/**
+ * Minimum-length rule for credential fields. Empty values stay valid so
+ * `required` owns the "field is empty" message and only one error shows.
+ */
+export const minLength =
+  (length: number, message?: string): Rule =>
+  (v) => {
+    const s = asText(v);
+    if (s === '') return null;
+    return s.length >= length ? null : message ?? `Must be at least ${length} characters.`;
+  };
+
+/**
+ * Cross-field match rule (confirm password === password). Reads the sibling
+ * field from the full values object the validator is already given.
+ */
+export const matches =
+  (otherField: string, message = 'Passwords do not match.'): Rule =>
+  (v, values) => {
+    const s = asText(v);
+    if (s === '') return null;
+    return s === asText(values[otherField] as FieldValue) ? null : message;
+  };
 
 const REFERENCE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -50,12 +83,15 @@ const makeReference = (kind: string) => {
 export function useRegForm<T extends Values>(
   idPrefix: string,
   initialValues: T,
-  buildSchema: (values: T) => Schema
+  buildSchema: (values: T) => Schema,
+  onSubmit?: (values: T) => Promise<SubmitResult>
 ): RegForm<T> {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<Status>('editing');
   const [submission, setSubmission] = useState<Submission | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const clearErrors = useCallback((names: string[]) => {
@@ -84,7 +120,7 @@ export function useRegForm<T extends Values>(
   );
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (status === 'submitting') return;
 
@@ -101,6 +137,7 @@ export function useRegForm<T extends Values>(
       });
 
       setErrors(found);
+      setFormError(null);
 
       const firstInvalid = Object.keys(found)[0];
       if (firstInvalid) {
@@ -112,11 +149,36 @@ export function useRegForm<T extends Values>(
         return;
       }
 
-      // No registration API exists yet, so nothing leaves the browser: the
-      // validated values are held in component state and handed back with a
-      // pending review status. Replace this block with the real request when the
-      // endpoint is available — the shape below is what it needs to send.
       setStatus('submitting');
+
+      // When a real submit handler is wired in, hand the validated values to it.
+      if (onSubmit) {
+        try {
+          const result = await onSubmit(values);
+          if (result.ok) {
+            setSuccessMessage(result.message ?? null);
+            setStatus('submitted');
+          } else {
+            setFormError(result.error ?? 'Something went wrong. Please try again.');
+            setStatus('editing');
+          }
+        } catch (err) {
+          // A successful server action redirects by throwing NEXT_REDIRECT; that
+          // must propagate so the Next router performs the navigation. Only true
+          // failures are turned into a visible form error.
+          const digest = (err as { digest?: string })?.digest;
+          if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) {
+            throw err;
+          }
+          setFormError('Something went wrong. Please try again.');
+          setStatus('editing');
+        }
+        return;
+      }
+
+      // Fallback (no real handler): nothing leaves the browser. The validated
+      // values are held in component state and handed back with a pending review
+      // status and a local reference code.
       const payload = {
         kind: idPrefix,
         fields: Object.fromEntries(
@@ -133,8 +195,20 @@ export function useRegForm<T extends Values>(
       setSubmission({ reference: makeReference(idPrefix), status: 'Submitted / Under Review' });
       setStatus('submitted');
     },
-    [buildSchema, idPrefix, status, values]
+    [buildSchema, idPrefix, onSubmit, status, values]
   );
 
-  return { idPrefix, values, errors, status, submission, formRef, set, patch, handleSubmit };
+  return {
+    idPrefix,
+    values,
+    errors,
+    status,
+    submission,
+    successMessage,
+    formError,
+    formRef,
+    set,
+    patch,
+    handleSubmit,
+  };
 }
