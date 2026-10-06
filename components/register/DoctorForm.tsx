@@ -1,14 +1,18 @@
 'use client';
 
-import { FileField, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
+import { AccountSection, FileField, FormCard, FormError, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
 import { usePathname } from 'next/navigation';
+import { signUpProvider } from '@/app/actions/auth';
 import { getDictionary } from '@/content/dictionary';
 import { localeFromPath } from '@/lib/i18n';
 import { optionsFor } from './optionsFor';
-import { useRegForm } from './useRegForm';
+import { matches, minLength, useRegForm } from './useRegForm';
 import { email, futureDate, npi, onlyIf, phone, required, requiredChoice, upload, zip } from './validate';
 
 const INITIAL = {
+  username: '',
+  password: '',
+  confirmPassword: '',
   firstName: '',
   lastName: '',
   email: '',
@@ -47,35 +51,45 @@ export default function DoctorForm() {
   const d = getDictionary(locale).register;
   const t = d.forms.doctor;
   const o = optionsFor(locale);
-  const form = useRegForm('doctor', INITIAL, (v) => ({
-    firstName: [required(d.validation.required)],
-    lastName: [required(d.validation.required)],
-    email: [required(d.validation.required), email],
-    phone: [required(d.validation.required), phone],
-    title: [requiredChoice(d.validation.choice)],
-    titleOther: [onlyIf(v.title === 'Other', required(d.validation.required))],
-    specialty: [requiredChoice(d.validation.choice)],
-    specialtyOther: [onlyIf(v.specialty === 'Other', required(d.validation.required))],
-    zip: [zip],
-    licenseNumber: [required(d.validation.required)],
-    licensingState: [requiredChoice(d.validation.choice)],
-    licenseExpiration: [required(d.validation.required), futureDate],
-    npi: [required(d.validation.required), npi],
-    uploadLicense: [upload],
-    uploadBoardCert: [upload],
-    uploadNpi: [upload],
-    uploadGovId: [upload],
-    uploadOther: [upload],
-  }));
+  const form = useRegForm(
+    'doctor',
+    INITIAL,
+    (v) => ({
+      email: [required(d.validation.required), email],
+      username: [required(d.validation.required)],
+      password: [required(d.validation.required), minLength(8, 'Password must be at least 8 characters.')],
+      confirmPassword: [required(d.validation.required), matches('password')],
+      firstName: [required(d.validation.required)],
+      lastName: [required(d.validation.required)],
+      phone: [required(d.validation.required), phone],
+      title: [requiredChoice(d.validation.choice)],
+      titleOther: [onlyIf(v.title === 'Other', required(d.validation.required))],
+      specialty: [requiredChoice(d.validation.choice)],
+      specialtyOther: [onlyIf(v.specialty === 'Other', required(d.validation.required))],
+      zip: [zip],
+      licenseNumber: [required(d.validation.required)],
+      licensingState: [requiredChoice(d.validation.choice)],
+      licenseExpiration: [required(d.validation.required), futureDate],
+      npi: [required(d.validation.required), npi],
+      uploadLicense: [upload],
+      uploadBoardCert: [upload],
+      uploadNpi: [upload],
+      uploadGovId: [upload],
+      uploadOther: [upload],
+    }),
+    (values) =>
+      signUpProvider('doctor', { ...values, name: `${values.firstName} ${values.lastName}`.trim() }, locale)
+  );
 
   const { values, status } = form;
 
-  if (status === 'submitted' && form.submission) {
+  if (status === 'submitted') {
     return (
       <FormCard title={t.title}>
         <SuccessPanel
           heading={d.common.received}
           submission={form.submission}
+          message={form.successMessage}
           note={t.successNote}
         />
       </FormCard>
@@ -85,11 +99,12 @@ export default function DoctorForm() {
   return (
     <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
+        <AccountSection form={form} legend="Create your account" emailLabel={d.fields.professionalEmail} />
+
         <FormSection legend={d.sections.professional}>
           <Grid>
             <TextField form={form} name="firstName" label={d.fields.firstName} required autoComplete="given-name" />
             <TextField form={form} name="lastName" label={d.fields.lastName} required autoComplete="family-name" />
-            <TextField form={form} name="email" label={d.fields.professionalEmail} type="email" required autoComplete="email" />
             <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
             <SelectField
               form={form}
@@ -163,6 +178,7 @@ export default function DoctorForm() {
           </Grid>
         </FormSection>
 
+        <FormError message={form.formError} />
         <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>

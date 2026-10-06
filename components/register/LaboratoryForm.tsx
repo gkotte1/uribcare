@@ -1,17 +1,21 @@
 'use client';
 
-import { ChoiceGroup, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField } from './Fields';
+import { AccountSection, ChoiceGroup, FormCard, FormError, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField } from './Fields';
 import { usePathname } from 'next/navigation';
+import { signUpProvider } from '@/app/actions/auth';
 import { getDictionary } from '@/content/dictionary';
 import { localeFromPath } from '@/lib/i18n';
 import { optionsFor } from './optionsFor';
-import { useRegForm } from './useRegForm';
+import { matches, minLength, useRegForm } from './useRegForm';
 import type { RowValue } from './validate';
 import { email, futureDate, onlyIf, phone, required, requiredChoice, website, zip } from './validate';
 
 const EMPTY_LOCATION: RowValue = { address: '', city: '', state: '', zip: '', phone: '', hours: '' };
 
 const INITIAL = {
+  username: '',
+  password: '',
+  confirmPassword: '',
   labName: '',
   legalName: '',
   email: '',
@@ -38,20 +42,28 @@ export default function LaboratoryForm() {
   const d = getDictionary(locale).register;
   const t = d.forms.laboratory;
   const o = optionsFor(locale);
-  const form = useRegForm('laboratory', INITIAL, (v) => ({
-    labName: [required(d.validation.required)],
-    legalName: [required(d.validation.required)],
-    email: [required(d.validation.required), email],
-    phone: [required(d.validation.required), phone],
-    address: [required(d.validation.required)],
-    city: [required(d.validation.required)],
-    state: [requiredChoice(d.validation.choice)],
-    zip: [required(d.validation.required), zip],
-    website: [website],
-    clia: [required(d.validation.required)],
-    certificateExpiration: [futureDate],
-    servicesOther: [onlyIf(v.services.includes('Other'), required(d.validation.required))],
-  }));
+  const form = useRegForm(
+    'laboratory',
+    INITIAL,
+    (v) => ({
+      email: [required(d.validation.required), email],
+      username: [required(d.validation.required)],
+      password: [required(d.validation.required), minLength(8, 'Password must be at least 8 characters.')],
+      confirmPassword: [required(d.validation.required), matches('password')],
+      labName: [required(d.validation.required)],
+      legalName: [required(d.validation.required)],
+      phone: [required(d.validation.required), phone],
+      address: [required(d.validation.required)],
+      city: [required(d.validation.required)],
+      state: [requiredChoice(d.validation.choice)],
+      zip: [required(d.validation.required), zip],
+      website: [website],
+      clia: [required(d.validation.required)],
+      certificateExpiration: [futureDate],
+      servicesOther: [onlyIf(v.services.includes('Other'), required(d.validation.required))],
+    }),
+    (values) => signUpProvider('laboratory', { ...values, name: values.labName }, locale)
+  );
 
   const { values, status } = form;
 
@@ -60,12 +72,13 @@ export default function LaboratoryForm() {
     form.set('locations', next);
   };
 
-  if (status === 'submitted' && form.submission) {
+  if (status === 'submitted') {
     return (
       <FormCard title={t.title}>
         <SuccessPanel
           heading={d.common.received}
           submission={form.submission}
+          message={form.successMessage}
           note={t.successNote}
         />
       </FormCard>
@@ -75,11 +88,12 @@ export default function LaboratoryForm() {
   return (
     <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
+        <AccountSection form={form} legend="Create your account" emailLabel={d.fields.businessEmail} />
+
         <FormSection legend={d.sections.business}>
           <Grid>
             <TextField form={form} name="labName" label={t.labName} required />
             <TextField form={form} name="legalName" label={t.legalName} required />
-            <TextField form={form} name="email" label={d.fields.businessEmail} type="email" required autoComplete="email" />
             <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
             <TextField form={form} name="address" label={d.fields.address} required autoComplete="street-address" span />
           </Grid>
@@ -238,6 +252,7 @@ export default function LaboratoryForm() {
           </button>
         </FormSection>
 
+        <FormError message={form.formError} />
         <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>

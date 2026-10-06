@@ -1,21 +1,25 @@
 'use client';
 
-import { ChoiceGroup, FormCard, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
+import { AccountSection, ChoiceGroup, FormCard, FormError, FormSection, Grid, SelectField, SubmitRow, SuccessPanel, TextField, TextareaField } from './Fields';
 import { usePathname } from 'next/navigation';
+import { signUpPatient } from '@/app/actions/auth';
 import { getDictionary } from '@/content/dictionary';
 import { localeFromPath } from '@/lib/i18n';
 import { optionsFor } from './optionsFor';
-import { useRegForm } from './useRegForm';
+import { matches, minLength, useRegForm } from './useRegForm';
 import { email, onlyIf, pastDate, phone, required, requiredChoice, zip } from './validate';
 
 const INITIAL = {
+  email: '',
+  username: '',
+  password: '',
+  confirmPassword: '',
   firstName: '',
   lastName: '',
   dob: '',
   age: '',
   gender: '',
   phone: '',
-  email: '',
   address: '',
   city: '',
   state: '',
@@ -55,30 +59,48 @@ export default function PatientForm() {
   const d = getDictionary(locale).register;
   const t = d.forms.patient;
   const o = optionsFor(locale);
-  const form = useRegForm('patient', INITIAL, (v) => ({
-    firstName: [required(d.validation.required)],
-    lastName: [required(d.validation.required)],
-    dob: [required(d.validation.required), pastDate],
-    phone: [required(d.validation.required), phone],
-    email: [required(d.validation.required), email],
-    zip: [zip],
-    patientType: [requiredChoice(d.validation.choice)],
-    problem: [requiredChoice(d.validation.choice)],
-    problemOther: [onlyIf(v.problem === 'Other', required(d.validation.required))],
-    therapyOther: [onlyIf(v.therapy === 'Other', required(d.validation.required))],
-    guardianName: [onlyIf(v.isMinor === 'Yes', required(d.validation.required))],
-    guardianPhone: [onlyIf(v.isMinor === 'Yes', required(d.validation.required)), phone],
-    guardianEmail: [email],
-  }));
+  const form = useRegForm(
+    'patient',
+    INITIAL,
+    (v) => ({
+      email: [required(d.validation.required), email],
+      username: [required(d.validation.required)],
+      password: [required(d.validation.required), minLength(8, 'Password must be at least 8 characters.')],
+      confirmPassword: [required(d.validation.required), matches('password')],
+      firstName: [required(d.validation.required)],
+      lastName: [required(d.validation.required)],
+      dob: [required(d.validation.required), pastDate],
+      phone: [required(d.validation.required), phone],
+      zip: [zip],
+      patientType: [requiredChoice(d.validation.choice)],
+      problem: [requiredChoice(d.validation.choice)],
+      problemOther: [onlyIf(v.problem === 'Other', required(d.validation.required))],
+      therapyOther: [onlyIf(v.therapy === 'Other', required(d.validation.required))],
+      guardianName: [onlyIf(v.isMinor === 'Yes', required(d.validation.required))],
+      guardianPhone: [onlyIf(v.isMinor === 'Yes', required(d.validation.required)), phone],
+      guardianEmail: [email],
+    }),
+    (values) => {
+      const fd = new FormData();
+      fd.set('email', values.email);
+      fd.set('password', values.password);
+      fd.set('full_name', `${values.firstName} ${values.lastName}`.trim());
+      fd.set('username', values.username);
+      fd.set('phone', values.phone);
+      fd.set('locale', locale);
+      return signUpPatient({ ok: false }, fd);
+    }
+  );
 
   const { values, status } = form;
 
-  if (status === 'submitted' && form.submission) {
+  if (status === 'submitted') {
     return (
       <FormCard title={t.title}>
         <SuccessPanel
           heading={d.common.received}
           submission={form.submission}
+          message={form.successMessage}
           note={t.successNote}
         />
       </FormCard>
@@ -88,6 +110,8 @@ export default function PatientForm() {
   return (
     <FormCard title={t.title} intro={t.intro}>
       <form ref={form.formRef} noValidate onSubmit={form.handleSubmit}>
+        <AccountSection form={form} legend="Create your account" emailLabel={d.fields.email} />
+
         <FormSection legend={d.sections.patientDetails}>
           <Grid>
             <TextField form={form} name="firstName" label={d.fields.firstName} required autoComplete="given-name" />
@@ -112,7 +136,6 @@ export default function PatientForm() {
             />
             <SelectField form={form} name="gender" label={d.fields.gender} options={o.genders} />
             <TextField form={form} name="phone" label={d.fields.phone} type="tel" required autoComplete="tel" />
-            <TextField form={form} name="email" label={d.fields.email} type="email" required autoComplete="email" span />
           </Grid>
         </FormSection>
 
@@ -178,6 +201,7 @@ export default function PatientForm() {
           ) : null}
         </FormSection>
 
+        <FormError message={form.formError} />
         <SubmitRow label={t.submit} submitting={status === 'submitting'} />
       </form>
     </FormCard>
